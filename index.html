@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LaundryPOS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e7d6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="LaundryPOS">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1462,6 +1466,14 @@ checkBanner();
 
 // Cek banner tiap menit
 setInterval(()=>{if(!bannerDismissed)checkBanner();},60000);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW terdaftar:', reg.scope))
+      .catch(err => console.error('SW gagal:', err));
+  }
 </script>
 </body>
 </html>
