@@ -1,13 +1,13 @@
 {
-  "name": "LaundryPOS - Kasir Digital",
-  "short_name": "LaundryPOS",
-  "description": "Aplikasi kasir digital untuk usaha laundry",
+  "name": "J Laundry & Drink",
+  "short_name": "JLaundry",
+  "description": "Aplikasi kasir digital J Laundry & Drink Express",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#f0ede8",
-  "theme_color": "#2e7d6b",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3f8f",
   "lang": "id",
   "categories": ["business", "productivity"],
   "icons": [
@@ -58,22 +58,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "screenshots/kasir.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Halaman Kasir"
-    },
-    {
-      "src": "screenshots/laporan.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Laporan Transaksi"
     }
   ],
   "shortcuts": [
