@@ -916,8 +916,9 @@ function konfirmasi(){
         ${note?`<p style="font-size:.73rem;margin-top:5px;color:var(--text3)">📝 ${note}</p>`:''}
         <div style="display:flex;gap:8px;margin-top:14px">
           <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakLabelThermalDariPending(${p.id})">🖨️ Cetak Struk</button>
-          <button class="btn-selesai" style="flex:1" onclick="selesai()">Selesai</button>
+          <button class="btn-selesai" style="flex:1;background:#25D366" onclick="kirimNotaWAPending(${p.id})">💬 Kirim WA</button>
         </div>
+        <button class="btn-selesai" style="margin-top:8px;background:var(--border);color:var(--text2)" onclick="selesai()">Selesai</button>
       </div>`;
     return;
   }
@@ -926,6 +927,7 @@ function konfirmasi(){
   const kembalian=activePayMethod==='tunai'?cash-total:0;
   const tx={id:Date.now(),time:new Date().toISOString(),customer:custName,phone:custPhone,items:[...cart],subtotal:getSubtotal(),discount:getDiscount(),total,method:activePayMethod,kembalian};
   transactions.unshift(tx);saveTx();
+  const hasPhone = custPhone && custPhone !== '-';
   document.getElementById('modalContent').innerHTML=`
     <div class="success-modal">
       <div class="success-icon">✅</div>
@@ -935,10 +937,13 @@ function konfirmasi(){
       ${kembalian>0?`<div class="kembalian-besar">${fmt(kembalian)}</div><p style="color:var(--accent3);font-weight:700">Kembalian</p>`:''}
       <p style="margin-top:7px;font-size:.73rem;color:var(--text3)">ID #${tx.id}</p>
       <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota Lunas</button>
-        <button class="btn-selesai" style="background:var(--accent3);flex:1" onclick="cetakLabelThermalDariTx(${tx.id})">🧾 Struk Thermal</button>
+        <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota PDF</button>
+        <button class="btn-selesai" style="background:var(--accent3);flex:1" onclick="cetakLabelThermalDariTx(${tx.id})">🧾 Struk</button>
       </div>
-      <button class="btn-selesai" style="margin-top:8px" onclick="selesai()">Transaksi Berikutnya</button>
+      <button class="btn-selesai" style="margin-top:8px;background:#25D366" onclick="kirimNotaWA(${tx.id},'LUNAS')">
+        💬 Kirim Nota via WhatsApp
+      </button>
+      <button class="btn-selesai" style="margin-top:8px;background:var(--border);color:var(--text2)" onclick="selesai()">Transaksi Berikutnya</button>
     </div>`;
 }
 function selesai(){clearCart();closeModal();}
@@ -1006,7 +1011,8 @@ function renderLaporan(){
       <td style="font-size:.73rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${items}</td>
       <td class="mono" style="font-weight:700;color:var(--accent)">${fmt(tx.total)}</td>
       <td><span class="bm bm-${tx.method}">${tx.method}</span></td>
-      <td><button style="font-size:.7rem;padding:3px 8px;border-radius:6px;border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;font-weight:700" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota</button></td>
+      <td><button style="font-size:.7rem;padding:3px 8px;border-radius:6px;border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;font-weight:700" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota</button>
+      <button style="font-size:.7rem;padding:3px 7px;border-radius:6px;border:1.5px solid #25D366;background:#e8fff2;color:#25D366;cursor:pointer;font-weight:700;margin-left:4px" onclick="kirimNotaWA(${tx.id},'LUNAS')">💬 WA</button></td>
     </tr>`;
   }).join('');
 }
@@ -1069,6 +1075,7 @@ function renderPendingPanel(){
         <div class="pc-total">${fmt(p.total)}</div>
         <div class="pc-actions">
           <button class="batal-pending-btn" onclick="batalPending(${p.id})">Batal</button>
+          <button style="background:#e8fff2;color:#25D366;border:1.5px solid #25D366;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="kirimNotaWAPending(${p.id})">💬 WA</button>
           <button style="background:var(--blue-bg);color:var(--blue);border:1.5px solid #93c5fd;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="cetakLabelThermalDariPending(${p.id})">🖨️ Struk</button>
           <button class="selesai-btn" onclick="selesaikanPending(${p.id})">✓ Selesai & Bayar</button>
         </div>
@@ -1307,49 +1314,61 @@ function buatLogoFallback(doc) {
 
 function buatKontenNota(doc, order, jenis) {
   const tX = 38;
-  const namaToko = tokoConfig.nama || 'J Laundry Express';
+  const namaToko = tokoConfig.nama || 'LaundryPOS';
+  const tagline  = tokoConfig.tagline || 'kasir digital';
   const rekening = tokoConfig.rekening || '';
-  // Kop
+  // ── KOP ──
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','bold'); doc.setFontSize(11);
   doc.text(namaToko.toUpperCase(), tX, 14);
   doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(71,85,105);
   if(rekening) doc.text(rekening, tX, 19);
-  // Label jenis
+  doc.setFontSize(7.5);
+  doc.text(tagline, tX, 23);
+  // ── LABEL JENIS ──
   if(jenis==='LUNAS') { doc.setTextColor(22,163,74); doc.text('NOTA LUNAS', 136,14,{align:'right'}); }
-  else { doc.setTextColor(220,38,38); doc.text('NOTA TAGIHAN', 136,14,{align:'right'}); }
+  else if(jenis==='TAGIHAN') { doc.setTextColor(220,38,38); doc.text('NOTA TAGIHAN', 136,14,{align:'right'}); }
+  else { doc.setTextColor(220,38,38); doc.text('NOTA '+jenis, 136,14,{align:'right'}); }
   doc.setTextColor(71,85,105); doc.setFontSize(8);
   doc.text(`No. Nota : ${order.notaUnik}`, 136,19,{align:'right'});
   doc.text(`Tanggal  : ${order.masuk}`, 136,23,{align:'right'});
-  // Garis
+  // ── GARIS EMAS ──
   doc.setDrawColor(212,175,55); doc.setLineWidth(0.5); doc.line(12,28,136,28);
-  // Box pelanggan
-  const boxH = 13;
+  // ── BOX PELANGGAN ──
+  const hasSelesai = order.selesai && order.selesai !== '-';
+  const boxH = hasSelesai ? 18 : 13;
   doc.setFillColor(241,245,249); doc.rect(12,32,124,boxH,'F');
   doc.setDrawColor(203,213,225); doc.rect(12,32,124,boxH);
   doc.setFont('Helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,41,59);
   doc.text(`PELANGGAN : ${order.nama.toUpperCase()}`, 16,38);
   doc.setFont('Helvetica','normal'); doc.setFontSize(8.5);
   doc.text(`No. HP : ${order.phone||'-'}`, 16,43);
-  // Header tabel
-  let tY = 38 + boxH;
+  if(hasSelesai) {
+    doc.setTextColor(46,125,107); doc.setFont('Helvetica','bold');
+    doc.text(`Est. Selesai : ${order.selesai}`, 16,48);
+  }
+  // ── HEADER TABEL ──
+  let tY = 32 + boxH + 1;
   doc.setFillColor(30,58,138); doc.rect(12,tY,124,7,'F');
   doc.setTextColor(255,255,255); doc.setFont('Helvetica','bold'); doc.setFontSize(8.5);
   doc.text('Rincian Layanan',15,tY+5);
   doc.text('Subtotal',133,tY+5,{align:'right'});
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','normal');
   let isiY = tY+7;
-  order.items.forEach(it => {
+  order.items.forEach((it,idx) => {
+    const bg = idx%2===0 ? [255,255,255] : [248,250,252];
+    doc.setFillColor(...bg); doc.rect(12,isiY,124,8,'F');
     doc.setDrawColor(226,232,240); doc.rect(12,isiY,124,8);
     const namaItem = it.namaItem.length>55 ? it.namaItem.substring(0,52)+'...' : it.namaItem;
+    doc.setFontSize(8); doc.setTextColor(15,23,42);
     doc.text(namaItem,15,isiY+5.5);
     doc.text(`Rp ${it.subtotal.toLocaleString('id-ID')}`,133,isiY+5.5,{align:'right'});
     isiY += 8;
   });
-  // Total
+  // ── TOTAL & STEMPEL ──
   let totY = isiY + 4;
   if(order.diskon>0) {
     doc.setFont('Helvetica','italic'); doc.setFontSize(8); doc.setTextColor(220,38,38);
-    doc.text(`* Diskon ${order.diskon}%`,13,totY+4);
+    doc.text(`* Diskon loyalitas ${order.diskon}% telah diterapkan`,13,totY+4);
     totY += 6;
   }
   doc.setFillColor(30,58,138); doc.rect(65,totY,71,9,'F');
@@ -1358,35 +1377,32 @@ function buatKontenNota(doc, order, jenis) {
   doc.text('TOTAL BAYAR :',69,totY+6);
   doc.setTextColor(253,224,71);
   doc.text(`Rp ${order.total.toLocaleString('id-ID')}`,131,totY+6,{align:'right'});
-  // Stempel
+  // Stempel status
   if(jenis==='LUNAS') {
-    doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.rect(15,totY,38,9);
+    doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.rect(15,totY,44,9);
     doc.setTextColor(22,163,74); doc.setFont('Helvetica','bold'); doc.setFontSize(9);
-    doc.text('PAID / LUNAS',21,totY+6);
+    doc.text('✓ PAID / LUNAS',17,totY+6);
   } else {
-    doc.setDrawColor(220,38,38); doc.setLineWidth(0.6); doc.rect(15,totY,38,9);
+    doc.setDrawColor(220,38,38); doc.setLineWidth(0.6); doc.rect(15,totY,44,9);
     doc.setTextColor(220,38,38); doc.setFont('Helvetica','bold'); doc.setFontSize(8.5);
-    doc.text('BELUM LUNAS',20,totY+6);
+    doc.text('⚠ BELUM LUNAS',17,totY+6);
   }
-  // Est selesai
-  if(order.selesai && order.selesai !== '-') {
-    let sY2 = totY + 14;
-    doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(71,85,105);
-    doc.text(`Est. Selesai: ${order.selesai}`,13,sY2);
-  }
-  // S&K
-  let sY = totY + 20;
+  // ── S&K (format lama 3 poin) ──
+  let sY = totY + 18;
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','bold'); doc.setFontSize(7.5);
   doc.text('Syarat & Ketentuan:', 12, sY);
   doc.setFont('Helvetica','italic'); doc.setTextColor(100,116,139); doc.setFontSize(7);
-  doc.text('1. Tunjukkan nota ini saat pengambilan.',12,sY+4);
-  doc.text('2. Komplain kerusakan maks. 1x24 jam sejak serah terima.',12,sY+7.5);
-  // TTD
-  let ttdY = sY+16;
+  doc.text('1. Tunjukkan Nota Digital ini saat pengambilan pakaian.',12,sY+4);
+  doc.text('2. Komplain kerusakan dilayani maks. 1x24 jam sejak serah terima.',12,sY+7.5);
+  const sk3 = '3. Kerusakan akibat sifat bahan, cacat pabrik, atau yang tidak dilaporkan bukan tanggung jawab kami.';
+  const sk3Lines = doc.splitTextToSize(sk3,124);
+  doc.text(sk3Lines,12,sY+11);
+  // ── TTD ──
+  let ttdY = sY+22;
   doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(15,23,42);
-  doc.text('Sistem Kasir Terverifikasi,',96,ttdY);
+  doc.text('Dicetak via Sistem Kasir Digital,',88,ttdY);
   doc.setFont('Helvetica','bold'); doc.setTextColor(29,78,216);
-  doc.text('[ ' + namaToko.toUpperCase() + ' ]',97,ttdY+7);
+  doc.text('[ ' + namaToko.toUpperCase() + ' ]',89,ttdY+7);
   doc.save(`Nota-${jenis}-${order.notaUnik}.pdf`);
 }
 
@@ -1453,6 +1469,86 @@ function buildThermal(doc, order) {
 // Tombol print dari laporan (tabel transaksi)
 function printFromLaporan(txId, jenis) {
   cetakNotaDigital(txId, jenis);
+}
+
+// ===== KIRIM NOTA VIA WHATSAPP =====
+function kirimNotaWA(txId, jenis) {
+  const tx = transactions.find(t => t.id === txId);
+  if(!tx) { alert('Transaksi tidak ditemukan!'); return; }
+  const namaToko = tokoConfig.nama || 'LaundryPOS';
+  const notaId   = buatNotaId(tx.id);
+  const tgl      = new Date(tx.time).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  const rincian  = tx.items.map(it => {
+    const sub = it.perKg && it.weight ? it.price * it.weight : it.price * it.qty;
+    return `  • ${it.name}: Rp ${sub.toLocaleString('id-ID')}`;
+  }).join('\n');
+  const diskonLine = tx.discount > 0 ? `\n💸 Diskon ${tx.discount}%: -Rp ${Math.round(tx.subtotal*tx.discount/100).toLocaleString('id-ID')}` : '';
+  const statusLine = jenis === 'LUNAS' ? '✅ *LUNAS*' : '⚠️ *BELUM LUNAS*';
+  const pesan = [
+    `*${statusLine}*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `🧺 *${namaToko}*`,
+    `📋 No. Nota: *${notaId}*`,
+    `📅 Tanggal: ${tgl}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `👤 Pelanggan: *${tx.customer}*`,
+    ``,
+    `📦 *Rincian Layanan:*`,
+    rincian,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `💰 Subtotal: Rp ${tx.subtotal.toLocaleString('id-ID')}${diskonLine}`,
+    `💳 *TOTAL: Rp ${tx.total.toLocaleString('id-ID')}*`,
+    `📲 Metode: ${tx.method.toUpperCase()}`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Terima kasih sudah mempercayakan cucian Anda kepada kami! 🙏`,
+    `_Simpan pesan ini sebagai bukti transaksi._`,
+  ].join('\n');
+
+  const phone = tx.phone && tx.phone !== '-'
+    ? tx.phone.replace(/[^0-9]/g,'').replace(/^0/,'62')
+    : '';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(pesan)}`;
+  window.open(url, '_blank');
+}
+
+// Kirim nota WA dari pending
+function kirimNotaWAPending(pendingId) {
+  const p = pendings.find(x => x.id === pendingId);
+  if(!p) { alert('Order tidak ditemukan!'); return; }
+  const namaToko = tokoConfig.nama || 'LaundryPOS';
+  const notaId   = buatNotaId(p.id);
+  const tglMasuk = p.tglMasuk ? new Date(p.tglMasuk+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-';
+  const tglEst   = p.tglEst   ? new Date(p.tglEst+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-';
+  const rincian  = p.items.map(it => {
+    const sub = it.perKg && it.weight ? it.price * it.weight : it.price * it.qty;
+    return `  • ${it.name}: Rp ${sub.toLocaleString('id-ID')}`;
+  }).join('\n');
+  const diskonLine = p.discount > 0 ? `\n💸 Diskon ${p.discount}%: -Rp ${Math.round(p.subtotal*p.discount/100).toLocaleString('id-ID')}` : '';
+  const noteLine = p.note ? `\n📝 Catatan: _${p.note}_` : '';
+  const pesan = [
+    `🧺 *${namaToko}*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `📋 No. Nota: *${notaId}*`,
+    `👤 Pelanggan: *${p.customer}*`,
+    ``,
+    `📅 Masuk: ${tglMasuk}`,
+    `✅ Est. Selesai: *${tglEst}*${noteLine}`,
+    ``,
+    `📦 *Rincian Layanan:*`,
+    rincian,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `💰 Subtotal: Rp ${p.subtotal.toLocaleString('id-ID')}${diskonLine}`,
+    `💳 *TOTAL: Rp ${p.total.toLocaleString('id-ID')}*`,
+    `⏳ Status: *PENDING*`,
+    `━━━━━━━━━━━━━━━━━━━`,
+    `Kami akan menghubungi Anda saat pakaian sudah siap diambil. Terima kasih! 🙏`,
+  ].join('\n');
+
+  const phone = p.phone && p.phone !== '-'
+    ? p.phone.replace(/[^0-9]/g,'').replace(/^0/,'62')
+    : '';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(pesan)}`;
+  window.open(url, '_blank');
 }
 
 // ===== INIT =====
