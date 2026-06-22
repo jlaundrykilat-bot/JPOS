@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LaundryPOS</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2e7d6b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="LaundryPOS">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -44,7 +40,30 @@ header{background:var(--accent);color:white;padding:0 16px;height:56px;display:f
 .banner.danger{background:#fee2e2;color:var(--danger);border-bottom:2px solid #fca5a5}
 .banner-close{margin-left:auto;opacity:.6;font-size:1rem}
 
-/* ===== KASIR ===== */
+/* ===== LOGIN PAGE ===== */
+#page-login{position:fixed;inset:0;background:var(--accent);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+#page-login.hidden{display:none}
+.login-box{background:var(--surface);border-radius:24px;padding:32px 28px;width:320px;max-width:92vw;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:var(--shadow-lg)}
+.login-logo{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--accent);text-align:center}
+.login-logo span{font-style:italic;opacity:.6;font-size:1rem;display:block;margin-top:2px}
+.login-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);text-align:center}
+.pin-display{display:flex;gap:10px;margin:4px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--border);background:transparent;transition:all .15s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-dot.error{background:var(--danger);border-color:var(--danger)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.pin-btn{padding:16px 8px;border-radius:var(--radius);border:2px solid var(--border);background:var(--bg);font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:500;cursor:pointer;transition:all .15s;color:var(--text)}
+.pin-btn:hover{border-color:var(--accent);background:var(--accent2)}
+.pin-btn:active{transform:scale(.93)}
+.pin-btn.del{font-size:1rem;color:var(--text3)}
+.pin-btn.del:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.pin-btn.empty{border-color:transparent;background:transparent;cursor:default}
+.pin-btn.empty:hover{border-color:transparent;background:transparent;transform:none}
+.login-error{font-size:.8rem;color:var(--danger);font-weight:700;text-align:center;min-height:20px}
+/* Logout btn di header */
+.logout-btn{background:rgba(255,255,255,.15);border:none;color:white;border-radius:8px;padding:5px 10px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+.user-info{font-size:.72rem;opacity:.8;white-space:nowrap}
 #page-kasir{flex-direction:column;height:calc(100vh - 56px);overflow:hidden}
 .kasir-inner{display:flex;flex:1;overflow:hidden;min-height:0}
 
@@ -179,7 +198,30 @@ header{background:var(--accent);color:white;padding:0 16px;height:56px;display:f
 .btn-selesai{margin-top:12px;width:100%;padding:11px;border-radius:var(--radius);border:none;background:var(--accent);color:white;font-family:'Nunito',sans-serif;font-weight:800;font-size:.93rem;cursor:pointer}
 .btn-selesai:hover{background:var(--accent3)}
 
-/* ===== LAPORAN ===== */
+/* ===== KURIR PAGE ===== */
+#page-kurir{flex-direction:column;overflow-y:auto}
+.kurir-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.kurir-card.jemput{border-color:#93c5fd}
+.kurir-card.antar{border-color:#86efac}
+.kc-header{display:flex;justify-content:space-between;align-items:center}
+.kc-name{font-weight:800;font-size:.92rem}
+.kc-badge{font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:10px}
+.kc-badge.jemput{background:var(--blue-bg);color:var(--blue)}
+.kc-badge.antar{background:#dcfce7;color:#166534}
+.kc-badge.selesai{background:#f0fdf4;color:#15803d}
+.kc-info{font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px}
+.kc-info a{color:var(--blue);font-weight:700;text-decoration:none}
+.kc-info a:hover{text-decoration:underline}
+.kc-total{font-family:'DM Mono',monospace;font-size:.92rem;font-weight:700;color:var(--accent)}
+.kc-cod{background:#fef3c7;color:var(--warn);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700}
+.kc-actions{display:flex;gap:7px;flex-wrap:wrap}
+.kc-btn{padding:7px 14px;border-radius:8px;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;transition:all .15s}
+.kc-btn.primary{background:var(--accent);color:white}
+.kc-btn.primary:hover{background:var(--accent3)}
+.kc-btn.blue{background:var(--blue);color:white}
+.kc-btn.blue:hover{background:#155e8a}
+.kc-btn.outline{background:none;border:1.5px solid var(--border);color:var(--text2)}
+.kc-btn.outline:hover{border-color:var(--accent);color:var(--accent)}
 #page-laporan{flex-direction:column;overflow-y:auto}
 .lap-inner{padding:18px 22px;display:flex;flex-direction:column;gap:16px;max-width:1100px;width:100%;margin:0 auto}
 .lap-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
@@ -303,14 +345,47 @@ header{background:var(--accent);color:white;padding:0 16px;height:56px;display:f
 </head>
 <body>
 
+<!-- ===== LOGIN PAGE ===== -->
+<div id="page-login">
+  <div class="login-box">
+    <div class="login-logo" id="loginLogo">LaundryPOS <span>kasir digital</span></div>
+    <div class="login-title">Masukkan PIN</div>
+    <div class="pin-display" id="pinDisplay">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <button class="pin-btn empty"></button>
+      <button class="pin-btn" onclick="pinInput('0')">0</button>
+      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo" onclick="showPage('kasir')" id="logoText">LaundryPOS <span>kasir digital</span></div>
-  <div class="nav-tabs">
+  <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" onclick="showPage('kasir')">🧾 Kasir</button>
     <button class="nav-tab" onclick="showPage('laporan')">📊 Laporan</button>
     <button class="nav-tab" onclick="showPage('pengaturan')">⚙️</button>
   </div>
-  <div class="clock" id="clock">--:--</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="user-info" id="userInfo"></span>
+    <div class="clock" id="clock">--:--</div>
+    <button class="logout-btn" id="logoutBtn" onclick="doLogout()" style="display:none">↩ Keluar</button>
+  </div>
 </header>
 
 <!-- BANNER area -->
@@ -526,6 +601,20 @@ header{background:var(--accent);color:white;padding:0 16px;height:56px;display:f
   <button style="width:100%;padding:6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.8rem;color:var(--text3);margin-top:4px" onclick="tutupIconPicker()">✕ Tutup</button>
 </div>
 
+<!-- KURIR PAGE -->
+<div id="page-kurir" class="page">
+  <div style="padding:20px;width:100%;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.3rem">🛵 Halaman Kurir</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="kurirStats"></div>
+    <div style="display:flex;gap:6px" id="kurirTabs">
+      <button class="filter-btn active" onclick="setKurirTab('jemput',this)">🏠 Jemput</button>
+      <button class="filter-btn" onclick="setKurirTab('antar',this)">📦 Antar</button>
+      <button class="filter-btn" onclick="setKurirTab('selesai',this)">✅ Selesai Hari Ini</button>
+    </div>
+    <div id="kurirList"></div>
+  </div>
+</div>
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
@@ -639,11 +728,26 @@ function showPage(p) {
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
-  const idx={kasir:0,laporan:1,pengaturan:2}[p];
-  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
-  if(p==='laporan') renderLaporan();
-  if(p==='pengaturan') renderPengaturan();
-  if(p==='kasir') checkBanner();
+
+  // Update active tab
+  const tabs = document.querySelectorAll('.nav-tab');
+  tabs.forEach(t => {
+    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`'${p}'`)) {
+      t.classList.add('active');
+    }
+  });
+
+  // Kalau kasir buka laporan tapi role KASIR → langsung ke tab pending
+  if (p === 'laporan') {
+    if (currentUser && currentUser.role === 'KASIR') {
+      setLapTab('pending', document.querySelector('.lap-tab'));
+    } else {
+      renderLaporan();
+    }
+  }
+  if (p === 'pengaturan') renderPengaturan();
+  if (p === 'kasir') checkBanner();
+  if (p === 'kurir') renderKurir();
 }
 
 // ===== CATEGORIES =====
@@ -916,9 +1020,8 @@ function konfirmasi(){
         ${note?`<p style="font-size:.73rem;margin-top:5px;color:var(--text3)">📝 ${note}</p>`:''}
         <div style="display:flex;gap:8px;margin-top:14px">
           <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakLabelThermalDariPending(${p.id})">🖨️ Cetak Struk</button>
-          <button class="btn-selesai" style="flex:1;background:#25D366" onclick="kirimNotaWAPending(${p.id})">💬 Kirim WA</button>
+          <button class="btn-selesai" style="flex:1" onclick="selesai()">Selesai</button>
         </div>
-        <button class="btn-selesai" style="margin-top:8px;background:var(--border);color:var(--text2)" onclick="selesai()">Selesai</button>
       </div>`;
     return;
   }
@@ -927,7 +1030,6 @@ function konfirmasi(){
   const kembalian=activePayMethod==='tunai'?cash-total:0;
   const tx={id:Date.now(),time:new Date().toISOString(),customer:custName,phone:custPhone,items:[...cart],subtotal:getSubtotal(),discount:getDiscount(),total,method:activePayMethod,kembalian};
   transactions.unshift(tx);saveTx();
-  const hasPhone = custPhone && custPhone !== '-';
   document.getElementById('modalContent').innerHTML=`
     <div class="success-modal">
       <div class="success-icon">✅</div>
@@ -937,13 +1039,10 @@ function konfirmasi(){
       ${kembalian>0?`<div class="kembalian-besar">${fmt(kembalian)}</div><p style="color:var(--accent3);font-weight:700">Kembalian</p>`:''}
       <p style="margin-top:7px;font-size:.73rem;color:var(--text3)">ID #${tx.id}</p>
       <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota PDF</button>
-        <button class="btn-selesai" style="background:var(--accent3);flex:1" onclick="cetakLabelThermalDariTx(${tx.id})">🧾 Struk</button>
+        <button class="btn-selesai" style="background:var(--blue);flex:1" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota Lunas</button>
+        <button class="btn-selesai" style="background:var(--accent3);flex:1" onclick="cetakLabelThermalDariTx(${tx.id})">🧾 Struk Thermal</button>
       </div>
-      <button class="btn-selesai" style="margin-top:8px;background:#25D366" onclick="kirimNotaWA(${tx.id},'LUNAS')">
-        💬 Kirim Nota via WhatsApp
-      </button>
-      <button class="btn-selesai" style="margin-top:8px;background:var(--border);color:var(--text2)" onclick="selesai()">Transaksi Berikutnya</button>
+      <button class="btn-selesai" style="margin-top:8px" onclick="selesai()">Transaksi Berikutnya</button>
     </div>`;
 }
 function selesai(){clearCart();closeModal();}
@@ -1011,8 +1110,7 @@ function renderLaporan(){
       <td style="font-size:.73rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${items}</td>
       <td class="mono" style="font-weight:700;color:var(--accent)">${fmt(tx.total)}</td>
       <td><span class="bm bm-${tx.method}">${tx.method}</span></td>
-      <td><button style="font-size:.7rem;padding:3px 8px;border-radius:6px;border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;font-weight:700" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota</button>
-      <button style="font-size:.7rem;padding:3px 7px;border-radius:6px;border:1.5px solid #25D366;background:#e8fff2;color:#25D366;cursor:pointer;font-weight:700;margin-left:4px" onclick="kirimNotaWA(${tx.id},'LUNAS')">💬 WA</button></td>
+      <td><button style="font-size:.7rem;padding:3px 8px;border-radius:6px;border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;font-weight:700" onclick="cetakNotaDigital(${tx.id},'LUNAS')">🖨️ Nota</button></td>
     </tr>`;
   }).join('');
 }
@@ -1075,7 +1173,6 @@ function renderPendingPanel(){
         <div class="pc-total">${fmt(p.total)}</div>
         <div class="pc-actions">
           <button class="batal-pending-btn" onclick="batalPending(${p.id})">Batal</button>
-          <button style="background:#e8fff2;color:#25D366;border:1.5px solid #25D366;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="kirimNotaWAPending(${p.id})">💬 WA</button>
           <button style="background:var(--blue-bg);color:var(--blue);border:1.5px solid #93c5fd;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="cetakLabelThermalDariPending(${p.id})">🖨️ Struk</button>
           <button class="selesai-btn" onclick="selesaikanPending(${p.id})">✓ Selesai & Bayar</button>
         </div>
@@ -1103,7 +1200,134 @@ function updatePendingBadge(){
   if(el){el.textContent=n;el.style.display=n>0?'inline':'none';}
 }
 
-// ===== PENGATURAN =====
+// ===== KURIR =====
+let activeKurirTab = 'jemput';
+
+function setKurirTab(tab, btn) {
+  activeKurirTab = tab;
+  document.querySelectorAll('#kurirTabs .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderKurir();
+}
+
+function getKurirData() {
+  // Jemput: pending dengan tipeOrder JEMPUT/JEMPUT+ANTAR, statusKurir belum DIJEMPUT
+  const jemput = pendings.filter(p =>
+    !p.done &&
+    (p.tipeOrder === 'JEMPUT' || p.tipeOrder === 'JEMPUT+ANTAR') &&
+    p.statusKurir !== 'DIJEMPUT' && p.statusKurir !== 'DIANTAR'
+  );
+  // Antar: pending yang sudah selesai diproses & perlu diantar
+  const antar = pendings.filter(p =>
+    p.done &&
+    (p.tipeOrder === 'ANTAR' || p.tipeOrder === 'JEMPUT+ANTAR') &&
+    p.statusKurir !== 'DIANTAR'
+  );
+  // Selesai hari ini
+  const today = new Date().toDateString();
+  const selesai = pendings.filter(p =>
+    p.statusKurir === 'DIANTAR' &&
+    p.kurirDoneTime && new Date(p.kurirDoneTime).toDateString() === today
+  );
+  return { jemput, antar, selesai };
+}
+
+function renderKurir() {
+  const { jemput, antar, selesai } = getKurirData();
+
+  document.getElementById('kurirStats').innerHTML = `
+    <div class="stat-card blue-card"><div class="slbl">Perlu Dijemput</div><div class="sval">${jemput.length}</div></div>
+    <div class="stat-card" style="background:#dcfce7;border-color:#86efac"><div class="slbl">Perlu Diantar</div><div class="sval" style="color:#166534">${antar.length}</div></div>`;
+
+  let list = [];
+  if (activeKurirTab === 'jemput') list = jemput;
+  else if (activeKurirTab === 'antar') list = antar;
+  else list = selesai;
+
+  const el = document.getElementById('kurirList');
+  if (!list.length) {
+    const msg = activeKurirTab === 'jemput' ? 'Tidak ada order yang perlu dijemput'
+              : activeKurirTab === 'antar' ? 'Tidak ada order yang perlu diantar'
+              : 'Belum ada yang selesai hari ini';
+    el.innerHTML = `<div class="no-data" style="background:var(--surface);border-radius:var(--radius);border:2px solid var(--border)">🎉 ${msg}</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${list.map(p => {
+    const waPhone = p.phone && p.phone !== '-' ? p.phone.replace(/^0/,'62').replace(/[^0-9]/g,'') : '';
+    const mapsUrl = p.alamat ? `https://www.google.com/maps/search/${encodeURIComponent(p.alamat)}` : '';
+    const codBadge = p.cod === 'YA' ? `<span class="kc-cod">💰 COD ${fmt(p.total)}</span>` : '';
+
+    if (activeKurirTab === 'jemput') {
+      return `<div class="kurir-card jemput">
+        <div class="kc-header">
+          <div class="kc-name">👤 ${p.customer}</div>
+          <span class="kc-badge jemput">🏠 Jemput</span>
+        </div>
+        <div class="kc-info">
+          ${waPhone ? `<a href="https://wa.me/${waPhone}" target="_blank">📞 ${p.phone}</a>` : `<span>📞 ${p.phone||'-'}</span>`}
+          ${p.alamat ? `<a href="${mapsUrl}" target="_blank">📍 ${p.alamat}</a>` : '<span style="color:var(--text3)">📍 Alamat belum diisi</span>'}
+          ${p.note ? `<span>📝 ${p.note}</span>` : ''}
+        </div>
+        <div class="kc-actions">
+          <button class="kc-btn primary" onclick="tandaiDijemput(${p.id})">✓ Sudah Dijemput</button>
+        </div>
+      </div>`;
+    }
+
+    if (activeKurirTab === 'antar') {
+      return `<div class="kurir-card antar">
+        <div class="kc-header">
+          <div class="kc-name">👤 ${p.customer}</div>
+          <span class="kc-badge antar">📦 Antar</span>
+        </div>
+        <div class="kc-info">
+          ${waPhone ? `<a href="https://wa.me/${waPhone}" target="_blank">📞 ${p.phone}</a>` : `<span>📞 ${p.phone||'-'}</span>`}
+          ${p.alamat ? `<a href="${mapsUrl}" target="_blank">📍 ${p.alamat}</a>` : '<span style="color:var(--text3)">📍 Alamat belum diisi</span>'}
+        </div>
+        <div class="kc-header">
+          <div class="kc-total">${fmt(p.total)}</div>
+          ${codBadge}
+        </div>
+        <div class="kc-actions">
+          <button class="kc-btn blue" onclick="tandaiDiantar(${p.id})">✓ Sudah Diantar</button>
+        </div>
+      </div>`;
+    }
+
+    // selesai
+    return `<div class="kurir-card">
+      <div class="kc-header">
+        <div class="kc-name">👤 ${p.customer}</div>
+        <span class="kc-badge selesai">✅ Selesai</span>
+      </div>
+      <div class="kc-info"><span>${fmt(p.total)}</span></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function tandaiDijemput(id) {
+  const p = pendings.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Konfirmasi: barang ${p.customer} sudah dijemput?`)) return;
+  p.statusKurir = 'DIJEMPUT';
+  savePending();
+  renderKurir();
+  alert('✅ Ditandai sudah dijemput. Barang siap ditimbang di kasir.');
+}
+
+function tandaiDiantar(id) {
+  const p = pendings.find(x => x.id === id);
+  if (!p) return;
+  const codMsg = p.cod === 'YA' ? `\n💰 Jangan lupa tagih ${fmt(p.total)} (COD)` : '';
+  if (!confirm(`Konfirmasi: barang ${p.customer} sudah diantar?${codMsg}`)) return;
+  p.statusKurir = 'DIANTAR';
+  p.kurirDoneTime = new Date().toISOString();
+  savePending();
+  renderKurir();
+}
+
+
 function renderPengaturan(){
   document.getElementById('set-nama-toko').value=tokoConfig.nama||'';
   document.getElementById('set-tagline').value=tokoConfig.tagline||'';
@@ -1314,61 +1538,49 @@ function buatLogoFallback(doc) {
 
 function buatKontenNota(doc, order, jenis) {
   const tX = 38;
-  const namaToko = tokoConfig.nama || 'LaundryPOS';
-  const tagline  = tokoConfig.tagline || 'kasir digital';
+  const namaToko = tokoConfig.nama || 'J Laundry Express';
   const rekening = tokoConfig.rekening || '';
-  // ── KOP ──
+  // Kop
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','bold'); doc.setFontSize(11);
   doc.text(namaToko.toUpperCase(), tX, 14);
   doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(71,85,105);
   if(rekening) doc.text(rekening, tX, 19);
-  doc.setFontSize(7.5);
-  doc.text(tagline, tX, 23);
-  // ── LABEL JENIS ──
+  // Label jenis
   if(jenis==='LUNAS') { doc.setTextColor(22,163,74); doc.text('NOTA LUNAS', 136,14,{align:'right'}); }
-  else if(jenis==='TAGIHAN') { doc.setTextColor(220,38,38); doc.text('NOTA TAGIHAN', 136,14,{align:'right'}); }
-  else { doc.setTextColor(220,38,38); doc.text('NOTA '+jenis, 136,14,{align:'right'}); }
+  else { doc.setTextColor(220,38,38); doc.text('NOTA TAGIHAN', 136,14,{align:'right'}); }
   doc.setTextColor(71,85,105); doc.setFontSize(8);
   doc.text(`No. Nota : ${order.notaUnik}`, 136,19,{align:'right'});
   doc.text(`Tanggal  : ${order.masuk}`, 136,23,{align:'right'});
-  // ── GARIS EMAS ──
+  // Garis
   doc.setDrawColor(212,175,55); doc.setLineWidth(0.5); doc.line(12,28,136,28);
-  // ── BOX PELANGGAN ──
-  const hasSelesai = order.selesai && order.selesai !== '-';
-  const boxH = hasSelesai ? 18 : 13;
+  // Box pelanggan
+  const boxH = 13;
   doc.setFillColor(241,245,249); doc.rect(12,32,124,boxH,'F');
   doc.setDrawColor(203,213,225); doc.rect(12,32,124,boxH);
   doc.setFont('Helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,41,59);
   doc.text(`PELANGGAN : ${order.nama.toUpperCase()}`, 16,38);
   doc.setFont('Helvetica','normal'); doc.setFontSize(8.5);
   doc.text(`No. HP : ${order.phone||'-'}`, 16,43);
-  if(hasSelesai) {
-    doc.setTextColor(46,125,107); doc.setFont('Helvetica','bold');
-    doc.text(`Est. Selesai : ${order.selesai}`, 16,48);
-  }
-  // ── HEADER TABEL ──
-  let tY = 32 + boxH + 1;
+  // Header tabel
+  let tY = 38 + boxH;
   doc.setFillColor(30,58,138); doc.rect(12,tY,124,7,'F');
   doc.setTextColor(255,255,255); doc.setFont('Helvetica','bold'); doc.setFontSize(8.5);
   doc.text('Rincian Layanan',15,tY+5);
   doc.text('Subtotal',133,tY+5,{align:'right'});
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','normal');
   let isiY = tY+7;
-  order.items.forEach((it,idx) => {
-    const bg = idx%2===0 ? [255,255,255] : [248,250,252];
-    doc.setFillColor(...bg); doc.rect(12,isiY,124,8,'F');
+  order.items.forEach(it => {
     doc.setDrawColor(226,232,240); doc.rect(12,isiY,124,8);
     const namaItem = it.namaItem.length>55 ? it.namaItem.substring(0,52)+'...' : it.namaItem;
-    doc.setFontSize(8); doc.setTextColor(15,23,42);
     doc.text(namaItem,15,isiY+5.5);
     doc.text(`Rp ${it.subtotal.toLocaleString('id-ID')}`,133,isiY+5.5,{align:'right'});
     isiY += 8;
   });
-  // ── TOTAL & STEMPEL ──
+  // Total
   let totY = isiY + 4;
   if(order.diskon>0) {
     doc.setFont('Helvetica','italic'); doc.setFontSize(8); doc.setTextColor(220,38,38);
-    doc.text(`* Diskon loyalitas ${order.diskon}% telah diterapkan`,13,totY+4);
+    doc.text(`* Diskon ${order.diskon}%`,13,totY+4);
     totY += 6;
   }
   doc.setFillColor(30,58,138); doc.rect(65,totY,71,9,'F');
@@ -1377,32 +1589,35 @@ function buatKontenNota(doc, order, jenis) {
   doc.text('TOTAL BAYAR :',69,totY+6);
   doc.setTextColor(253,224,71);
   doc.text(`Rp ${order.total.toLocaleString('id-ID')}`,131,totY+6,{align:'right'});
-  // Stempel status
+  // Stempel
   if(jenis==='LUNAS') {
-    doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.rect(15,totY,44,9);
+    doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.rect(15,totY,38,9);
     doc.setTextColor(22,163,74); doc.setFont('Helvetica','bold'); doc.setFontSize(9);
-    doc.text('✓ PAID / LUNAS',17,totY+6);
+    doc.text('PAID / LUNAS',21,totY+6);
   } else {
-    doc.setDrawColor(220,38,38); doc.setLineWidth(0.6); doc.rect(15,totY,44,9);
+    doc.setDrawColor(220,38,38); doc.setLineWidth(0.6); doc.rect(15,totY,38,9);
     doc.setTextColor(220,38,38); doc.setFont('Helvetica','bold'); doc.setFontSize(8.5);
-    doc.text('⚠ BELUM LUNAS',17,totY+6);
+    doc.text('BELUM LUNAS',20,totY+6);
   }
-  // ── S&K (format lama 3 poin) ──
-  let sY = totY + 18;
+  // Est selesai
+  if(order.selesai && order.selesai !== '-') {
+    let sY2 = totY + 14;
+    doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(71,85,105);
+    doc.text(`Est. Selesai: ${order.selesai}`,13,sY2);
+  }
+  // S&K
+  let sY = totY + 20;
   doc.setTextColor(15,23,42); doc.setFont('Helvetica','bold'); doc.setFontSize(7.5);
   doc.text('Syarat & Ketentuan:', 12, sY);
   doc.setFont('Helvetica','italic'); doc.setTextColor(100,116,139); doc.setFontSize(7);
-  doc.text('1. Tunjukkan Nota Digital ini saat pengambilan pakaian.',12,sY+4);
-  doc.text('2. Komplain kerusakan dilayani maks. 1x24 jam sejak serah terima.',12,sY+7.5);
-  const sk3 = '3. Kerusakan akibat sifat bahan, cacat pabrik, atau yang tidak dilaporkan bukan tanggung jawab kami.';
-  const sk3Lines = doc.splitTextToSize(sk3,124);
-  doc.text(sk3Lines,12,sY+11);
-  // ── TTD ──
-  let ttdY = sY+22;
+  doc.text('1. Tunjukkan nota ini saat pengambilan.',12,sY+4);
+  doc.text('2. Komplain kerusakan maks. 1x24 jam sejak serah terima.',12,sY+7.5);
+  // TTD
+  let ttdY = sY+16;
   doc.setFont('Helvetica','normal'); doc.setFontSize(8); doc.setTextColor(15,23,42);
-  doc.text('Dicetak via Sistem Kasir Digital,',88,ttdY);
+  doc.text('Sistem Kasir Terverifikasi,',96,ttdY);
   doc.setFont('Helvetica','bold'); doc.setTextColor(29,78,216);
-  doc.text('[ ' + namaToko.toUpperCase() + ' ]',89,ttdY+7);
+  doc.text('[ ' + namaToko.toUpperCase() + ' ]',97,ttdY+7);
   doc.save(`Nota-${jenis}-${order.notaUnik}.pdf`);
 }
 
@@ -1471,84 +1686,118 @@ function printFromLaporan(txId, jenis) {
   cetakNotaDigital(txId, jenis);
 }
 
-// ===== KIRIM NOTA VIA WHATSAPP =====
-function kirimNotaWA(txId, jenis) {
-  const tx = transactions.find(t => t.id === txId);
-  if(!tx) { alert('Transaksi tidak ditemukan!'); return; }
-  const namaToko = tokoConfig.nama || 'LaundryPOS';
-  const notaId   = buatNotaId(tx.id);
-  const tgl      = new Date(tx.time).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
-  const rincian  = tx.items.map(it => {
-    const sub = it.perKg && it.weight ? it.price * it.weight : it.price * it.qty;
-    return `  • ${it.name}: Rp ${sub.toLocaleString('id-ID')}`;
-  }).join('\n');
-  const diskonLine = tx.discount > 0 ? `\n💸 Diskon ${tx.discount}%: -Rp ${Math.round(tx.subtotal*tx.discount/100).toLocaleString('id-ID')}` : '';
-  const statusLine = jenis === 'LUNAS' ? '✅ *LUNAS*' : '⚠️ *BELUM LUNAS*';
-  const pesan = [
-    `*${statusLine}*`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `🧺 *${namaToko}*`,
-    `📋 No. Nota: *${notaId}*`,
-    `📅 Tanggal: ${tgl}`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `👤 Pelanggan: *${tx.customer}*`,
-    ``,
-    `📦 *Rincian Layanan:*`,
-    rincian,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `💰 Subtotal: Rp ${tx.subtotal.toLocaleString('id-ID')}${diskonLine}`,
-    `💳 *TOTAL: Rp ${tx.total.toLocaleString('id-ID')}*`,
-    `📲 Metode: ${tx.method.toUpperCase()}`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `Terima kasih sudah mempercayakan cucian Anda kepada kami! 🙏`,
-    `_Simpan pesan ini sebagai bukti transaksi._`,
-  ].join('\n');
+// ===== AUTH =====
+// PIN sementara hardcode — nanti dari Google Sheets
+const USERS_DEFAULT = [
+  { nama: 'Owner',   pin: '1234', role: 'OWNER', device: 'Laptop' },
+  { nama: 'Kasir 1', pin: '5678', role: 'KASIR',  device: 'Tablet' },
+  { nama: 'Kurir 1', pin: '9012', role: 'KURIR',  device: 'HP'     },
+];
 
-  const phone = tx.phone && tx.phone !== '-'
-    ? tx.phone.replace(/[^0-9]/g,'').replace(/^0/,'62')
-    : '';
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(pesan)}`;
-  window.open(url, '_blank');
+let currentUser = JSON.parse(sessionStorage.getItem('lpos_user') || 'null');
+let pinBuffer = '';
+
+function pinInput(num) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += num;
+  updatePinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(cekPIN, 150);
+  }
 }
 
-// Kirim nota WA dari pending
-function kirimNotaWAPending(pendingId) {
-  const p = pendings.find(x => x.id === pendingId);
-  if(!p) { alert('Order tidak ditemukan!'); return; }
-  const namaToko = tokoConfig.nama || 'LaundryPOS';
-  const notaId   = buatNotaId(p.id);
-  const tglMasuk = p.tglMasuk ? new Date(p.tglMasuk+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-';
-  const tglEst   = p.tglEst   ? new Date(p.tglEst+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-';
-  const rincian  = p.items.map(it => {
-    const sub = it.perKg && it.weight ? it.price * it.weight : it.price * it.qty;
-    return `  • ${it.name}: Rp ${sub.toLocaleString('id-ID')}`;
-  }).join('\n');
-  const diskonLine = p.discount > 0 ? `\n💸 Diskon ${p.discount}%: -Rp ${Math.round(p.subtotal*p.discount/100).toLocaleString('id-ID')}` : '';
-  const noteLine = p.note ? `\n📝 Catatan: _${p.note}_` : '';
-  const pesan = [
-    `🧺 *${namaToko}*`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `📋 No. Nota: *${notaId}*`,
-    `👤 Pelanggan: *${p.customer}*`,
-    ``,
-    `📅 Masuk: ${tglMasuk}`,
-    `✅ Est. Selesai: *${tglEst}*${noteLine}`,
-    ``,
-    `📦 *Rincian Layanan:*`,
-    rincian,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `💰 Subtotal: Rp ${p.subtotal.toLocaleString('id-ID')}${diskonLine}`,
-    `💳 *TOTAL: Rp ${p.total.toLocaleString('id-ID')}*`,
-    `⏳ Status: *PENDING*`,
-    `━━━━━━━━━━━━━━━━━━━`,
-    `Kami akan menghubungi Anda saat pakaian sudah siap diambil. Terima kasih! 🙏`,
-  ].join('\n');
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('loginError').textContent = '';
+  resetPinDotError();
+}
 
-  const phone = p.phone && p.phone !== '-'
-    ? p.phone.replace(/[^0-9]/g,'').replace(/^0/,'62')
-    : '';
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(pesan)}`;
-  window.open(url, '_blank');
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+
+function resetPinDotError() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('dot' + i).classList.remove('error');
+  }
+}
+
+function cekPIN() {
+  const user = USERS_DEFAULT.find(u => u.pin === pinBuffer);
+  if (user) {
+    currentUser = user;
+    sessionStorage.setItem('lpos_user', JSON.stringify(user));
+    masukAplikasi(user);
+  } else {
+    // Tampilkan error
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('dot' + i).classList.add('error');
+      document.getElementById('dot' + i).classList.remove('filled');
+    }
+    document.getElementById('loginError').textContent = '❌ PIN salah, coba lagi';
+    setTimeout(() => {
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('loginError').textContent = '';
+    }, 1200);
+  }
+}
+
+function masukAplikasi(user) {
+  // Sembunyikan login
+  document.getElementById('page-login').classList.add('hidden');
+  // Tampilkan info user di header
+  document.getElementById('userInfo').textContent = `${user.nama} (${user.role})`;
+  document.getElementById('logoutBtn').style.display = 'block';
+  // Tampilkan nav sesuai role
+  renderNavByRole(user.role);
+  // Arahkan ke halaman sesuai role
+  if (user.role === 'KURIR') {
+    showPage('kurir');
+  } else {
+    showPage('kasir');
+  }
+}
+
+function renderNavByRole(role) {
+  const nav = document.getElementById('navTabs');
+  if (role === 'OWNER') {
+    nav.innerHTML = `
+      <button class="nav-tab active" onclick="showPage('kasir')">🧾 Kasir</button>
+      <button class="nav-tab" onclick="showPage('laporan')">📊 Laporan</button>
+      <button class="nav-tab" onclick="showPage('pengaturan')">⚙️</button>`;
+  } else if (role === 'KASIR') {
+    nav.innerHTML = `
+      <button class="nav-tab active" onclick="showPage('kasir')">🧾 Kasir</button>
+      <button class="nav-tab" onclick="showPage('laporan')">📋 Pending</button>`;
+  } else if (role === 'KURIR') {
+    nav.innerHTML = `
+      <button class="nav-tab active" onclick="showPage('kurir')">🛵 Kurir</button>`;
+  }
+}
+
+function doLogout() {
+  if (!confirm('Keluar dari aplikasi?')) return;
+  currentUser = null;
+  pinBuffer = '';
+  sessionStorage.removeItem('lpos_user');
+  updatePinDots();
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('page-login').classList.remove('hidden');
+  document.getElementById('userInfo').textContent = '';
+  document.getElementById('logoutBtn').style.display = 'none';
+}
+
+function cekSession() {
+  if (currentUser) {
+    masukAplikasi(currentUser);
+  }
+  // Kalau tidak ada session, login page tetap tampil
 }
 
 // ===== INIT =====
@@ -1558,18 +1807,10 @@ renderCategories();
 renderProducts();
 renderCart();
 updatePendingBadge();
-checkBanner();
+cekSession(); // cek session dulu — kalau ada langsung masuk
 
 // Cek banner tiap menit
 setInterval(()=>{if(!bannerDismissed)checkBanner();},60000);
-</script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW terdaftar:', reg.scope))
-      .catch(err => console.error('SW gagal:', err));
-  }
 </script>
 </body>
 </html>
