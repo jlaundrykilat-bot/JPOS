@@ -35,6 +35,7 @@ let activePayMethod = 'tunai';
 let activeLapTab = 'transaksi';
 let scanningForCartId = null;
 let bannerDismissed = false;
+let editingPendingId = null;
 
 // ===== UTILITY FUNCTIONS =====
 const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
@@ -486,6 +487,81 @@ function finishTx(){
   renderProducts();
 }
 
+// ===== EDIT PENDING / ADD-ON FEATURE =====
+function openEditPending(pendingIndex){
+  const p = pendings[pendingIndex];
+  editingPendingId = pendingIndex;
+  activeCategory = 'Semua';
+  
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">📝 Edit Order - ${p.customer}</div>
+    <div class="modal-info">
+      <div class="modal-row"><span>Total Saat Ini</span><span class="mval">${fmt(p.total)}</span></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">📌 Item Saat Ini</div>
+      <div style="font-size:.82rem;color:var(--text2);background:var(--bg);padding:8px;border-radius:8px;margin-bottom:12px">${p.items}</div>
+      
+      <div style="font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">➕ Tambah Item</div>
+      <div id="addOnGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-confirm" onclick="saveEditPending()">✓ Simpan Perubahan</button>
+    </div>`;
+  
+  // Render add-on items
+  const addOnGrid = document.getElementById('addOnGrid');
+  addOnGrid.innerHTML = products.map((prod, idx) => `
+    <button style="padding:8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:.78rem;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s" 
+      onmouseover="this.style.background='var(--accent2)'" 
+      onmouseout="this.style.background='var(--bg)'"
+      onclick="addItemToPending(${idx})">
+      <span style="font-size:1.2rem">${prod.icon}</span>
+      <span style="font-weight:700">${prod.name}</span>
+      <span style="font-size:.7rem;color:var(--text3)">${fmt(prod.price)}</span>
+    </button>
+  `).join('');
+  
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function addItemToPending(productIndex){
+  const p = pendings[editingPendingId];
+  const prod = products[productIndex];
+  const itemStr = `${prod.name}×1`;
+  p.items = p.items + ', ' + itemStr;
+  p.total += prod.price;
+  
+  // Update UI
+  const modal = document.getElementById('modalContent');
+  const itemsDisplay = modal.querySelector('[style*="📌"]').nextElementSibling;
+  itemsDisplay.innerHTML = p.items;
+  
+  const totalDisplay = modal.querySelector('.modal-row .mval');
+  totalDisplay.innerHTML = fmt(p.total);
+  
+  alert(`✅ ${prod.name} ditambahkan!`);
+}
+
+function saveEditPending(){
+  savePending();
+  closeModal();
+  renderPendingList();
+  alert('✅ Order berhasil diperbarui!');
+}
+
+function openAddNotePending(pendingIndex){
+  const p = pendings[pendingIndex];
+  const newNote = prompt('📝 Edit Catatan untuk ' + p.customer + ':', p.note || '');
+  if(newNote !== null){
+    p.note = newNote;
+    savePending();
+    renderPendingList();
+    alert('✅ Catatan berhasil disimpan!');
+  }
+}
+
 // ===== ICON PICKER =====
 let currentIconField = null;
 
@@ -651,7 +727,7 @@ function renderPendingList(){
     return;
   }
   
-  pendingList.innerHTML = active.map(p=>{
+  pendingList.innerHTML = active.map((p, idx)=>{
     const countdown = getCountdown(p.tglEst);
     return `
       <div class="pending-card">
@@ -672,6 +748,8 @@ function renderPendingList(){
           <div class="pc-total">${fmt(p.total)}</div>
           <div class="pc-actions">
             <button class="selesai-btn" onclick="selesaiPending('${p.customer}')">✓ Selesai</button>
+            <button class="kc-btn primary" style="padding:5px 10px;font-size:.75rem" onclick="openEditPending(${idx})">➕ Add On</button>
+            <button class="kc-btn blue" style="padding:5px 10px;font-size:.75rem" onclick="openAddNotePending(${idx})">📝 Nota</button>
             <button class="batal-pending-btn" onclick="batalPending('${p.customer}')">✕ Batal</button>
           </div>
         </div>
@@ -695,7 +773,6 @@ function batalPending(customer){
 
 // ===== KURIR PAGE (Courier/Delivery) =====
 function renderKurir(){
-  // Placeholder for kurir functionality
   document.getElementById('kurirList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Fitur Kurir sedang dikembangkan</div>';
 }
 
