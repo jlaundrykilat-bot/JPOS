@@ -204,13 +204,20 @@ function renderCart(){
     :cart.map(c=>{
       const showScan = c.perKg && aiConfig.key;
       const weightLabel = c.weight ? `<div class="ci-weight">⚖️ ${c.weight} kg = ${fmt(c.price*c.weight)}</div>` : '';
+      const manualWeightRow = c.perKg ? `<div class="manual-weight-row">
+          <input type="text" inputmode="decimal" class="manual-weight-input" placeholder="mis. 2,5"
+                 value="${c.weight?String(c.weight).replace('.',','):''}"
+                 onchange="inputManualWeight(${c.id}, this.value)"
+                 onclick="event.stopPropagation()">
+          ${showScan?`<button class="scan-btn-inline" onclick="openScan(${c.id})">📷 Scan</button>`:''}
+        </div>` : '';
       return `<div class="cart-item">
         <div class="ci-icon">${c.icon}</div>
         <div class="ci-info">
           <div class="ci-name">${c.name}</div>
           <div class="ci-price">${c.perKg&&c.weight?fmt(c.price*c.weight):fmt(c.price*c.qty)}</div>
           ${weightLabel}
-          ${showScan?`<button class="scan-btn" onclick="openScan(${c.id})">📷 Scan Timbangan</button>`:''}
+          ${manualWeightRow}
         </div>
         <div class="qty-ctrl">
           <button class="qty-btn" onclick="changeQty(${c.id},-1)">−</button>
@@ -221,6 +228,25 @@ function renderCart(){
       </div>`;
     }).join('');
   renderFooter();
+}
+
+// Input berat manual — terima koma ATAU titik sebagai desimal (format Indonesia: "2,5")
+// Dipakai sebagai fallback saat Scan AI gagal / kehabisan kuota token.
+function inputManualWeight(cartId, rawValue){
+  const item=cart.find(c=>c.id===cartId);
+  if(!item)return;
+  const trimmed=String(rawValue).trim();
+  if(!trimmed){item.weight=null;renderCart();return;}
+  const normalized=trimmed.replace(',','.');
+  const weight=parseFloat(normalized);
+  if(isNaN(weight)||weight<=0){
+    alert('❌ Berat tidak valid. Contoh format yang benar: 2,5 atau 2.5');
+    renderCart();
+    return;
+  }
+  item.weight=weight;
+  item.qty=1;
+  renderCart();
 }
 
 function renderFooter(){
@@ -555,6 +581,7 @@ function renderPendingPanel(){
         <div class="pc-total">${fmt(p.total)}</div>
         <div class="pc-actions">
           <button class="batal-pending-btn" onclick="batalPending(${p.id})">Batal</button>
+          <button style="background:var(--warn-bg);color:var(--warn);border:1.5px solid #fcd34d;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="openEditPending(${p.id})">✏️ Edit Item</button>
           <button style="background:var(--blue-bg);color:var(--blue);border:1.5px solid #93c5fd;border-radius:8px;padding:5px 9px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;cursor:pointer" onclick="cetakLabelThermalDariPending(${p.id})">🖨️ Struk</button>
           <button class="selesai-btn" onclick="selesaikanPending(${p.id})">✓ Selesai & Bayar</button>
         </div>
@@ -563,9 +590,108 @@ function renderPendingPanel(){
   }).join('');
 }
 
+// ===== EDIT ITEM PENDING =====
+// Untuk kasus: pelanggan lupa sebutkan item (mis. sprei), baru ketahuan
+// saat proses cuci — item bisa ditambah/dikurangi sebelum "Selesai & Bayar".
+let editingPendingId = null;
+
+function openEditPending(id){
+  const p=pendings.find(x=>x.id===id);
+  if(!p)return;
+  editingPendingId=id;
+  renderEditPendingModal();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function editPendingCalcTotal(p){
+  const subtotal=p.items.reduce((s,c)=>s+(c.perKg&&c.weight?c.price*c.weight:c.price*c.qty),0);
+  return {subtotal,total:Math.round(subtotal-subtotal*(p.discount||0)/100)};
+}
+
+function renderEditPendingModal(){
+  const p=pendings.find(x=>x.id===editingPendingId);
+  if(!p)return;
+  const searchEl=document.getElementById('editPendingSearch');
+  const q=(searchEl?.value||'').toLowerCase();
+  const filtered=products.filter(pr=>pr.name.toLowerCase().includes(q)||pr.cat.toLowerCase().includes(q));
+  const itemsHtml=p.items.length?p.items.map((it,idx)=>`
+    <div class="cart-item">
+      <div class="ci-icon">${it.icon}</div>
+      <div class="ci-info">
+        <div class="ci-name">${it.name}</div>
+        <div class="ci-price">${it.perKg&&it.weight?fmt(it.price*it.weight):fmt(it.price*it.qty)}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="editPendingChangeQty(${idx},-1)">−</button>
+        <span class="qty-num">${it.qty}</span>
+        <button class="qty-btn" onclick="editPendingChangeQty(${idx},1)">+</button>
+      </div>
+      <button class="ci-del" onclick="editPendingRemoveItem(${idx})">✕</button>
+    </div>`).join(''):'<div class="cart-empty" style="padding:14px 8px">Belum ada item.</div>';
+  const {total}=editPendingCalcTotal(p);
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">✏️ Edit Order — ${p.customer}</div>
+    <div class="section-label" style="margin-bottom:6px">Item Saat Ini</div>
+    <div style="max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:12px">${itemsHtml}</div>
+    <div class="modal-row big" style="margin-bottom:12px"><span>Total Baru</span><span class="mval">${fmt(total)}</span></div>
+    <div class="section-label" style="margin-bottom:6px">Tambah Item</div>
+    <input class="search-input" id="editPendingSearch" type="text" placeholder="🔍 Cari layanan..." oninput="renderEditPendingModal()" value="${q}" style="margin-bottom:8px">
+    <div class="product-grid" style="max-height:170px;grid-template-columns:repeat(auto-fill,minmax(84px,1fr))">
+      ${filtered.map(pr=>`<div class="product-card" onclick="editPendingAddItem(${pr.id})">
+        <div class="p-icon">${pr.icon}</div>
+        <div class="p-name">${pr.name}</div>
+        <div class="p-unit">${pr.unit}</div>
+        <div class="p-price">${fmt(pr.price)}</div>
+      </div>`).join('')}
+    </div>
+    <div class="modal-actions" style="margin-top:13px">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-confirm" onclick="saveEditPending()">💾 Simpan Perubahan</button>
+    </div>`;
+  const newSearchEl=document.getElementById('editPendingSearch');
+  if(newSearchEl){newSearchEl.focus();const v=newSearchEl.value;newSearchEl.setSelectionRange(v.length,v.length);}
+}
+
+function editPendingAddItem(prodId){
+  const p=pendings.find(x=>x.id===editingPendingId);
+  if(!p)return;
+  const prod=products.find(x=>x.id===prodId);
+  if(!prod)return;
+  const ex=p.items.find(it=>it.id===prodId);
+  if(ex)ex.qty++;
+  else p.items.push({...prod,qty:1,weight:null});
+  renderEditPendingModal();
+}
+
+function editPendingChangeQty(idx,delta){
+  const p=pendings.find(x=>x.id===editingPendingId);
+  if(!p)return;
+  p.items[idx].qty+=delta;
+  if(p.items[idx].qty<=0)p.items.splice(idx,1);
+  renderEditPendingModal();
+}
+
+function editPendingRemoveItem(idx){
+  const p=pendings.find(x=>x.id===editingPendingId);
+  if(!p)return;
+  p.items.splice(idx,1);
+  renderEditPendingModal();
+}
+
+function saveEditPending(){
+  const p=pendings.find(x=>x.id===editingPendingId);
+  if(!p)return;
+  if(!p.items.length){alert('❌ Order tidak boleh kosong. Kalau memang mau dihapus, pakai tombol Batal.');return;}
+  const {subtotal,total}=editPendingCalcTotal(p);
+  p.subtotal=subtotal;p.total=total;
+  savePending();
+  editingPendingId=null;
+  closeModal();
+  renderPendingPanel();
+  updatePendingBadge();
+}
 function selesaikanPending(id){
   const p=pendings.find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Tandai order ${p.customer} (${fmt(p.total)}) sebagai selesai?`))return;
   p.done=true;p.doneTime=new Date().toISOString();
   transactions.unshift({id:Date.now(),time:p.doneTime,customer:p.customer,phone:p.phone,items:p.items,subtotal:p.subtotal,discount:p.discount,total:p.total,method:'pending→selesai',kembalian:0});
   saveTx();savePending();updatePendingBadge();bannerDismissed=false;checkBanner();renderPendingPanel();

@@ -133,6 +133,14 @@ header{background:var(--accent);color:white;padding:0 16px;height:56px;display:f
 
 /* Scan timbangan btn */
 .scan-btn{width:100%;padding:8px;border-radius:var(--radius-sm);border:2px dashed var(--blue);background:var(--blue-bg);color:var(--blue);font-family:'Nunito',sans-serif;font-weight:800;font-size:.8rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:2px}
+
+/* Input berat manual (fallback saat AI kehabisan token) */
+.manual-weight-row{display:flex;gap:6px;align-items:center;margin-top:3px}
+.manual-weight-input{width:66px;padding:4px 8px;border:1.5px solid var(--blue);border-radius:6px;font-family:'DM Mono',monospace;font-size:.75rem;background:var(--blue-bg);color:var(--blue);outline:none;transition:all .15s}
+.manual-weight-input:focus{background:white;border-color:var(--accent)}
+.manual-weight-input::placeholder{color:var(--blue);opacity:.5}
+.scan-btn-inline{padding:4px 9px;border-radius:6px;border:1.5px dashed var(--blue);background:var(--blue-bg);color:var(--blue);font-family:'Nunito',sans-serif;font-weight:700;font-size:.68rem;cursor:pointer;white-space:nowrap;transition:all .15s}
+.scan-btn-inline:hover{background:#dbeafe}
 .scan-btn:hover{background:#dbeafe}
 
 .pending-badge{background:var(--blue);color:white;border-radius:8px;padding:1px 6px;font-size:.65rem;font-weight:800;margin-left:4px}
