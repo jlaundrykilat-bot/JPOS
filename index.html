@@ -4,39 +4,136 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LaundryPOS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a3f8f">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-:root {
-  --bg:#f0ede8;--surface:#faf8f5;--border:#ddd8cf;
-  --accent:#2e7d6b;--accent2:#e8f5f1;--accent3:#1a5c4e;
-  --danger:#c0392b;--danger-bg:#fdf2f0;
-  --warn:#d97706;--warn-bg:#fffbeb;
-  --blue:#1d6fa4;--blue-bg:#e8f2fb;
-  --purple:#7c3aed;--purple-bg:#f5f3ff;
-  --text:#1c1a17;--text2:#6b6355;--text3:#9d9185;
-  --shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.14);
-  --radius:14px;--radius-sm:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-
-/* LOGO PREVIEW */
-.logo-preview-box{width:100%;height:80px;background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden}
-.logo-preview-box img{max-width:100%;max-height:100%;object-fit:contain}
-.logo-upload-btn{width:100%;padding:12px;background:var(--accent2);border:2px dashed var(--accent);border-radius:var(--radius-sm);color:var(--accent);font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .15s;text-align:center;margin-bottom:8px}
-.logo-upload-btn:hover{background:var(--accent);color:white}
-.logo-clear-btn{width:100%;padding:8px;background:none;border:1.5px solid var(--danger);border-radius:var(--radius-sm);color:var(--danger);font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s}
-.logo-clear-btn:hover{background:var(--danger-bg)}
-#logoFileInput{display:none}
-
-</style>
+<script src="style.js"></script>
 </head>
 <body>
 
-<!-- MODAL OVERLAY -->
-<div id="modalOverlay" class="modal-overlay">
-  <div class="modal" id="modalContent"></div>
+<!-- ===== LOGIN PAGE ===== -->
+<div id="page-login">
+  <div class="login-box">
+    <div class="login-logo" id="loginLogo">LaundryPOS <span>kasir digital</span></div>
+    <div class="login-title">Masukkan PIN</div>
+    <div class="pin-display" id="pinDisplay">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <button class="pin-btn empty"></button>
+      <button class="pin-btn" onclick="pinInput('0')">0</button>
+      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo" onclick="showPage('kasir')" id="logoText">LaundryPOS <span>kasir digital</span></div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" onclick="showPage('kasir')">🧾 Kasir</button>
+    <button class="nav-tab" onclick="showPage('laporan')">📊 Laporan</button>
+    <button class="nav-tab" onclick="showPage('pengaturan')">⚙️</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="user-info" id="userInfo"></span>
+    <div class="clock" id="clock">--:--</div>
+    <button class="logout-btn" id="logoutBtn" onclick="doLogout()" style="display:none">↩ Keluar</button>
+  </div>
+</header>
+
+<!-- BANNER area -->
+<div class="banner-wrap" id="bannerWrap" style="display:none">
+  <div class="banner" id="bannerEl">
+    <span id="bannerText"></span>
+    <span class="banner-close" onclick="closeBanner()">✕</span>
+  </div>
+</div>
+
+<!-- KASIR -->
+<div id="page-kasir" class="page active">
+  <div class="kasir-inner">
+    <div class="product-panel">
+      <input class="search-input" id="searchInput" type="text" placeholder="🔍  Cari layanan..." oninput="renderProducts()">
+      <div class="cat-filter" id="catFilter"></div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+    <div class="cart-panel">
+      <div class="cart-header">
+        <div class="cart-title">🛒 Pesanan</div>
+        <button class="cart-clear" onclick="clearCart()">Hapus Semua</button>
+      </div>
+      <div class="customer-section">
+        <label>Nama Pelanggan</label>
+        <input type="text" id="custName" placeholder="Wajib untuk pending...">
+        <label>No. HP</label>
+        <input type="text" id="custPhone" placeholder="Opsional...">
+      </div>
+      <div class="cart-items" id="cartItems">
+        <div class="cart-empty"><div class="e-icon">🧺</div>Belum ada item.<br>Tap layanan untuk menambah.</div>
+      </div>
+      <div class="cart-footer">
+        <div class="sum-row"><span>Subtotal</span><span class="mono" id="subtotalVal">Rp 0</span></div>
+        <div class="disc-row"><span>Diskon</span><input type="number" id="discountInput" min="0" max="100" value="0" oninput="renderFooter()"> %</div>
+        <div class="sum-row total"><span>Total</span><span class="mono" id="totalVal">Rp 0</span></div>
+        <div class="btn-row">
+          <button class="pending-btn" id="pendingBtn" onclick="openPending()" disabled>🕐 Pending</button>
+          <button class="bayar-btn" id="bayarBtn" onclick="openBayar()" disabled>Bayar →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LAPORAN -->
+<div id="page-laporan" class="page">
+  <div class="lap-inner">
+    <div class="lap-header">
+      <div class="lap-title">📊 Laporan</div>
+      <div class="lap-tabs">
+        <button class="lap-tab active" onclick="setLapTab('transaksi',this)">Transaksi</button>
+        <button class="lap-tab blue-active" onclick="setLapTab('pending',this)">Pending <span class="pending-badge" id="pendingCount" style="display:none">0</span></button>
+      </div>
+    </div>
+    <div id="lapTransaksi">
+      <div class="filter-row" style="margin-bottom:13px">
+        <button class="filter-btn active" onclick="setFilter('hari',this)">Hari Ini</button>
+        <button class="filter-btn" onclick="setFilter('minggu',this)">7 Hari</button>
+        <button class="filter-btn" onclick="setFilter('bulan',this)">30 Hari</button>
+        <button class="filter-btn" onclick="setFilter('semua',this)">Semua</button>
+        <button class="export-btn" onclick="exportCSV()">⬇️ Export CSV</button>
+      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="chart-box"><h3>Grafik Pendapatan (7 Hari Terakhir)</h3><div class="bar-chart" id="barChart"></div></div>
+      <div>
+        <div class="section-label" style="margin-bottom:9px">Riwayat Transaksi</div>
+        <div class="tx-wrap">
+          <table class="tx-table">
+            <thead><tr><th>#</th><th>Waktu</th><th>Pelanggan</th><th>Items</th><th>Total</th><th>Metode</th><th>Print</th></tr></thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="lapPending" style="display:none">
+      <div class="stats-grid" style="margin-bottom:14px" id="pendingStats"></div>
+      <div class="section-label" style="margin-bottom:9px">Daftar Order Pending</div>
+      <div class="pending-list" id="pendingList"></div>
+    </div>
+  </div>
 </div>
 
 <!-- PENGATURAN -->
@@ -51,7 +148,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <label>Logo untuk Nota</label>
         <div class="logo-preview-box" id="logoPreview"></div>
         <button class="logo-upload-btn" onclick="document.getElementById('logoFileInput').click()">📸 Upload Logo</button>
-        <input type="file" id="logoFileInput" accept="image/*" onchange="uploadLogo(event)" style="display:none">
+        <input type="file" id="logoFileInput" accept="image/*" onchange="uploadLogo(event)">
         <button class="logo-clear-btn" onclick="clearLogo()">🗑️ Hapus Logo</button>
       </div>
       <div class="set-field">
@@ -72,10 +169,133 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       </div>
     </div>
 
+    <!-- AI Timbangan -->
+    <div class="set-section">
+      <div class="set-section-title">⚖️ Scan Timbangan AI</div>
+      <div class="set-field">
+        <label>Base URL API</label>
+        <input type="text" id="set-ai-url" placeholder="https://ai.sumopod.com">
+        <small>Contoh: https://ai.sumopod.com</small>
+      </div>
+      <div class="set-field">
+        <label>API Key</label>
+        <input type="password" id="set-ai-key" placeholder="sk-...">
+        <small>API Key Sumopod kamu. Tersimpan di browser saja, tidak dikirim ke mana-mana.</small>
+      </div>
+      <div class="set-field">
+        <label>Model</label>
+        <input type="text" id="set-ai-model" placeholder="gpt-4.1-nano" value="gpt-4.1-nano">
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="set-save-btn" onclick="saveAI()">💾 Simpan</button>
+        <button class="set-save-btn" style="background:var(--blue)" onclick="testAI()">🧪 Test Koneksi</button>
+        <span class="set-saved" id="aiSaved">✓ Tersimpan!</span>
+      </div>
+    </div>
+
+    <!-- Edit Layanan -->
+    <div class="set-section">
+      <div class="set-section-title">🧺 Edit Layanan & Harga</div>
+      <div class="svc-header">
+        <span>Icon</span><span>Nama Layanan</span><span>Kategori</span><span>Harga (Rp)</span><span></span>
+      </div>
+      <div class="service-list" id="serviceList"></div>
+      <button class="add-svc-btn" onclick="addService()">+ Tambah Layanan</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="set-save-btn" onclick="saveServices()">💾 Simpan Layanan</button>
+        <span class="set-saved" id="svcSaved">✓ Tersimpan!</span>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- ICON PICKER OVERLAY & POPUP -->
+<div class="icon-picker-overlay" id="iconPickerOverlay" onclick="tutupIconPicker()"></div>
+<div class="icon-picker-popup" id="iconPickerPopup">
+  <div class="icon-picker-title">Pilih Icon Layanan</div>
+  <div class="icon-picker-section">
+    <div class="icon-picker-section-label">👕 Cuci</div>
+    <div class="icon-picker-grid">
+      <button class="icon-option" onclick="pilihIcon('👕')">👕</button>
+      <button class="icon-option" onclick="pilihIcon('👗')">👗</button>
+      <button class="icon-option" onclick="pilihIcon('👔')">👔</button>
+      <button class="icon-option" onclick="pilihIcon('🧥')">🧥</button>
+      <button class="icon-option" onclick="pilihIcon('🥼')">🥼</button>
+      <button class="icon-option" onclick="pilihIcon('👘')">👘</button>
+      <button class="icon-option" onclick="pilihIcon('🩱')">🩱</button>
+      <button class="icon-option" onclick="pilihIcon('🩲')">🩲</button>
+      <button class="icon-option" onclick="pilihIcon('🧣')">🧣</button>
+      <button class="icon-option" onclick="pilihIcon('🧤')">🧤</button>
+      <button class="icon-option" onclick="pilihIcon('🧢')">🧢</button>
+      <button class="icon-option" onclick="pilihIcon('👒')">👒</button>
+    </div>
+  </div>
+  <div class="icon-picker-section">
+    <div class="icon-picker-section-label">👟 Alas Kaki & Tas</div>
+    <div class="icon-picker-grid">
+      <button class="icon-option" onclick="pilihIcon('👟')">👟</button>
+      <button class="icon-option" onclick="pilihIcon('👠')">👠</button>
+      <button class="icon-option" onclick="pilihIcon('👡')">👡</button>
+      <button class="icon-option" onclick="pilihIcon('👞')">👞</button>
+      <button class="icon-option" onclick="pilihIcon('🥿')">🥿</button>
+      <button class="icon-option" onclick="pilihIcon('👜')">👜</button>
+      <button class="icon-option" onclick="pilihIcon('👝')">👝</button>
+      <button class="icon-option" onclick="pilihIcon('🎒')">🎒</button>
+      <button class="icon-option" onclick="pilihIcon('💼')">💼</button>
+    </div>
+  </div>
+  <div class="icon-picker-section">
+    <div class="icon-picker-section-label">🛏️ Rumah Tangga</div>
+    <div class="icon-picker-grid">
+      <button class="icon-option" onclick="pilihIcon('🛏️')">🛏️</button>
+      <button class="icon-option" onclick="pilihIcon('🪮')">🪮</button>
+      <button class="icon-option" onclick="pilihIcon('🪟')">🪟</button>
+      <button class="icon-option" onclick="pilihIcon('🪑')">🪑</button>
+      <button class="icon-option" onclick="pilihIcon('🧸')">🧸</button>
+      <button class="icon-option" onclick="pilihIcon('🪆')">🪆</button>
+    </div>
+  </div>
+  <div class="icon-picker-section">
+    <div class="icon-picker-section-label">⚡ Layanan & Tambahan</div>
+    <div class="icon-picker-grid">
+      <button class="icon-option" onclick="pilihIcon('⚡')">⚡</button>
+      <button class="icon-option" onclick="pilihIcon('🔥')">🔥</button>
+      <button class="icon-option" onclick="pilihIcon('💨')">💨</button>
+      <button class="icon-option" onclick="pilihIcon('🧺')">🧺</button>
+      <button class="icon-option" onclick="pilihIcon('✨')">✨</button>
+      <button class="icon-option" onclick="pilihIcon('💧')">💧</button>
+      <button class="icon-option" onclick="pilihIcon('🛵')">🛵</button>
+      <button class="icon-option" onclick="pilihIcon('🚗')">🚗</button>
+      <button class="icon-option" onclick="pilihIcon('📦')">📦</button>
+      <button class="icon-option" onclick="pilihIcon('🧴')">🧴</button>
+      <button class="icon-option" onclick="pilihIcon('🧼')">🧼</button>
+      <button class="icon-option" onclick="pilihIcon('🪣')">🪣</button>
+    </div>
+  </div>
+  <button style="width:100%;padding:6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.8rem;color:var(--text3);margin-top:4px" onclick="tutupIconPicker()">✕ Tutup</button>
+</div>
+
+<!-- KURIR PAGE -->
+<div id="page-kurir" class="page">
+  <div style="padding:20px;width:100%;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.3rem">🛵 Halaman Kurir</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="kurirStats"></div>
+    <div style="display:flex;gap:6px" id="kurirTabs">
+      <button class="filter-btn active" onclick="setKurirTab('jemput',this)">🏠 Jemput</button>
+      <button class="filter-btn" onclick="setKurirTab('antar',this)">📦 Antar</button>
+      <button class="filter-btn" onclick="setKurirTab('selesai',this)">✅ Selesai Hari Ini</button>
+    </div>
+    <div id="kurirList"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(event)">
+
 <script src="index.js"></script>
-<script src="style.js"></script>
 </body>
 </html>
