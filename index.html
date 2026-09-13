@@ -1009,7 +1009,7 @@ function konfirmasi(){
     if(!tglMasuk||!tglEst){alert('Isi tanggal masuk & estimasi!');return;}
     if(new Date(tglEst)<new Date(tglMasuk)){alert('Estimasi tidak boleh sebelum tanggal masuk!');return;}
     const p={id:Date.now(),createdAt:new Date().toISOString(),tglMasuk,tglEst,customer:custName,phone:custPhone,items:[...cart],subtotal:getSubtotal(),discount:getDiscount(),total,note,done:false};
-    pendings.unshift(p);savePending();updatePendingBadge();bannerDismissed=false;checkBanner();
+    pendings.unshift(p);savePending();updatePendingBadge();bannerDismissed=false;checkBanner();onPendingCreated(p);
     document.getElementById('modalContent').innerHTML=`
       <div class="success-modal">
         <div class="success-icon">🕐</div>
@@ -1030,7 +1030,7 @@ function konfirmasi(){
   if(activePayMethod==='tunai'&&cash<total){alert('Uang kurang!');return;}
   const kembalian=activePayMethod==='tunai'?cash-total:0;
   const tx={id:Date.now(),time:new Date().toISOString(),customer:custName,phone:custPhone,items:[...cart],subtotal:getSubtotal(),discount:getDiscount(),total,method:activePayMethod,kembalian};
-  transactions.unshift(tx);saveTx();
+  transactions.unshift(tx);saveTx();onTransaksiSuccess(tx);
   document.getElementById('modalContent').innerHTML=`
     <div class="success-modal">
       <div class="success-icon">✅</div>
@@ -1385,7 +1385,7 @@ let iconPickerTargetIdx = null;
 
 function renderServiceList(){
   const el=document.getElementById('serviceList');
-  const cats = ['Cuci', 'Setrika', 'Dry Clean', 'Karpet', 'Tambahan'];
+  const cats = ['Cuci', 'Setrika', 'Dry Clean', 'Cuci Setrika', 'Tambahan'];
   el.innerHTML=products.map((p,i)=>`
     <div class="service-row">
       <button class="icon-pick-btn" onclick="bukaIconPicker(${i},this)" title="Klik untuk pilih icon">${p.icon}</button>
@@ -1817,5 +1817,6 @@ cekSession(); // cek session dulu — kalau ada langsung masuk
 // Cek banner tiap menit
 setInterval(()=>{if(!bannerDismissed)checkBanner();},60000);
 </script>
+<script src="sync.js"></script>
 </body>
 </html>
