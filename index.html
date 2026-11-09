@@ -235,7 +235,8 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
   <div class="nota-paper" id="notaPaper"></div>
   <div class="digital-footer">
     <button class="btn btn-outline" onclick="closeDigital()">Tutup</button>
-    <button class="btn" onclick="sendWA()">📲 WA</button>
+    <button class="btn" onclick="sendWA()">📲 Chat WA</button>
+    <button class="btn" onclick="kirimWAPdf()">📎 WA PDF</button>
     <button class="btn" onclick="shareDigital()">Share</button>
     <button class="btn" onclick="printDigital()">🖨️ Print</button>
     <button class="btn" id="btnMode" onclick="toggleStruk()">🧾 Struk</button>
@@ -820,6 +821,148 @@ function sendWA(){
   window.open('https://wa.me/'+hp+'?text='+encodeURIComponent(msg),'_blank');
 }
 
+const HW=[].concat([278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278],Array(10).fill(556),[278,278,584,584,584,556,1015],[667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611],[278,278,278,469,556,333],[556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500],[334,260,334,584]);
+const HB=[].concat([278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278],Array(10).fill(556),[333,333,584,584,584,611,975],[722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611],[333,278,333,584,556,333],[556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500],[389,280,389,584]);
+const TERMS=['Pengambilan cucian harus membawa nota atau menunjukkan bukti transaksi.','Cucian yang tidak diambil dalam 1 minggu, kerusakan/kehilangan bukan tanggung jawab kami.','Komplain maksimal 1x24 jam setelah cucian diambil.','Pakaian dengan kondisi khusus (mudah luntur, sobek, kancing lepas, berjamur, berbulu, dll) wajib diinformasikan di awal transaksi. Komplain terkait kondisi tersebut akan ditolak apabila tidak ada pemberitahuan di awal.'];
+const waChars=s=>{const m={'—':'-','–':'-','−':'-','’':"'",'‘':"'",'“':'"','”':'"','…':'...'};let o='';for(const ch of String(s==null?'':s)){const c=ch.charCodeAt(0);if(c>=32&&c<256)o+=ch;else if(m[ch])o+=m[ch];else if(c<0x2000)o+='?';}return o;};
+const tw=(s,z,b)=>{let w=0;for(const ch of s){const c=ch.charCodeAt(0);w+=(c>=32&&c<=126?(b?HB:HW)[c-32]:556);}return w*z/1000;};
+function wrapT(s,z,b,mw){
+  const out=[];let line='';
+  waChars(s).split(/\s+/).filter(Boolean).forEach(w=>{
+    while(tw(w,z,b)>mw&&w.length>1){let k=w.length-1;while(k>1&&tw(w.slice(0,k),z,b)>mw)k--;if(line){out.push(line);line='';}out.push(w.slice(0,k));w=w.slice(k);}
+    const t=line?line+' '+w:w;
+    if(tw(t,z,b)<=mw)line=t;else{if(line)out.push(line);line=w;}
+  });
+  if(line)out.push(line);
+  return out.length?out:[''];
+}
+const notaNoOf=n=>'JL-'+(n.tanggal||'').replace(/-/g,'').slice(2)+'-'+(n.no?String(n.no).padStart(4,'0'):n.id.slice(-4));
+function toJpeg(src,max){
+  return new Promise(res=>{
+    const t=setTimeout(()=>res(null),4000),im=new Image();
+    im.onload=()=>{try{
+      let w=im.naturalWidth,h=im.naturalHeight;const k=Math.min(1,max/Math.max(w,h));
+      w=Math.max(1,Math.round(w*k));h=Math.max(1,Math.round(h*k));
+      const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+      g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(im,0,0,w,h);
+      const b=atob(c.toDataURL('image/jpeg',0.85).split(',')[1]),u=new Uint8Array(b.length);
+      for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+      clearTimeout(t);res({u,w,h});
+    }catch(e){clearTimeout(t);res(null);}};
+    im.onerror=()=>{clearTimeout(t);res(null);};
+    im.src=src;
+  });
+}
+async function buildNotaPdf(n){
+  const W=420,M=24,R=W-M,CW=R-M;
+  const logo=settings.logo?await toJpeg(settings.logo,160):null;
+  const photo=n.photo?await toJpeg(n.photo,360):null;
+  const total=totalOf(n),paid=paidOf(n,total),pp=parts(n),remain=Math.max(0,total-paid),change=Math.max(0,paid-total),isL=total>0&&remain===0;
+  const O=[];
+  const col=h=>{const v=parseInt(h.slice(1),16);return [(v>>16)&255,(v>>8)&255,v&255].map(x=>(x/255).toFixed(3)).join(' ');};
+  const T=(x,y,s,z,b,c,al)=>{s=waChars(s);if(!s)return;const w=tw(s,z,b);O.push({k:'t',x:al==='r'?x-w:al==='c'?x-w/2:x,y,s,z,b,c:c||'#222222'});};
+  const Rc=(x,y,w,h,f,st)=>O.push({k:'r',x,y,w,h,f,st});
+  const Ln=(x1,y,x2,c)=>O.push({k:'l',x1,y,x2,c});
+  const Im=(id,x,y,w,h)=>O.push({k:'i',id,x,y,w,h});
+  const tx=logo?M+58:M;
+  const addr=wrapT((settings.shopAddress||'')+(settings.shopContact?' | '+settings.shopContact:''),8,false,R-tx);
+  const hh=Math.max(70,52+(addr.length-1)*11+16);
+  Rc(0,0,W,hh,'#1e4b8f');
+  if(logo){Rc(M,11,48,48,'#ffffff');Im('Im1',M,11,48,48);}
+  const nmShop=waChars(settings.shopName||'LAUNDRY');
+  T(tx,26,nmShop,tw(nmShop,15,true)>R-tx?11:15,true,'#ffffff');
+  T(tx,39,settings.shopSub||'',8.5,false,'#dbe8fb');
+  addr.forEach((s,i)=>T(tx,52+i*11,s,8,false,'#dbe8fb'));
+  let y=hh+26;
+  const L=['No. Nota: '+notaNoOf(n),'Tanggal: '+(n.tanggal||'-')];
+  if(lyn(n.layanan))L.push('Layanan: '+lyn(n.layanan));
+  if(n.estimasi)L.push('Estimasi selesai: '+n.estimasi);
+  T(M,y,'NOTA TAGIHAN',12,true,'#1e4b8f');
+  L.forEach((s,i)=>T(M,y+16+i*12,s,9,false));
+  const nm=wrapT(n.nama||'-',11,true,140),bx=R-156,boxH=24+nm.length*13+(n.hp?12:0)+4;
+  Rc(bx,y-12,156,boxH,'#eaf2ff','#1e4b8f');
+  T(bx+8,y,'PELANGGAN TERHORMAT:',6.5,false,'#1e4b8f');
+  nm.forEach((s,i)=>T(bx+8,y+14+i*13,s,11,true));
+  if(n.hp)T(bx+8,y+14+nm.length*13,'HP: '+n.hp,8.5);
+  y+=Math.max(16+L.length*12,boxH-12)+14;
+  const c1=M+6,c2=212,c3=R-6;
+  Rc(M,y,CW,18,'#dbe8fb');
+  T(c1,y+12.5,'Rincian Item Pakaian',8.5,true,'#1e4b8f');T(c2,y+12.5,'Perhitungan',8.5,true,'#1e4b8f');T(c3,y+12.5,'Subtotal',8.5,true,'#1e4b8f','r');
+  y+=18;
+  (n.items||[]).forEach((it,i)=>{
+    const a=wrapT((i+1)+') '+it.jenis,9,false,c2-c1-8),b=wrapT(it.jumlah+(it.sat?' '+it.sat:'')+' x '+rp(it.harga),9,false,c3-c2-62),ln=Math.max(a.length,b.length);
+    a.forEach((s,k)=>T(c1,y+12+k*11,s,9));b.forEach((s,k)=>T(c2,y+12+k*11,s,9));
+    T(c3,y+12,rp(lineSub(it.jumlah,it.harga)),9,true,'#222222','r');
+    y+=ln*11+8;Ln(M,y,R,'#cfd8e8');
+  });
+  y+=16;
+  const tr=[['Subtotal',pp.gross]];
+  if(pp.eks)tr.push(['Layanan '+(lyn(n.layanan)||'Ekspres'),pp.eks]);
+  if(pp.antar)tr.push(['Antar-Jemput',pp.antar]);
+  if(pp.disc)tr.push(['Diskon',-pp.disc]);
+  tr.forEach(r=>{T(c3-90,y,r[0],9,true,'#222222','r');T(c3,y,(r[1]<0?'- ':'')+rp(Math.abs(r[1])),9,true,'#222222','r');y+=13;});
+  y+=8;
+  const gc=isL?'#2e7d32':'#c2185b';
+  Rc(M,y,CW,26,isL?'#e8f5e9':'#fdecef',gc);
+  T(W/2,y+17.5,isL?'LUNAS':(paid>0?'DP - BELUM LUNAS':'BELUM LUNAS'),11,true,gc,'c');
+  y+=42;
+  const pd=[['Status Bayar',isL?'Lunas':(paid>0?'DP / Sebagian':'Belum Bayar')],['Sudah Bayar',rp(paid)],['Sisa',rp(remain)]];
+  if(change>0)pd.push(['Kembalian',rp(change)]);
+  pd.push(['Metode',String(n.payMethod||'cash').toUpperCase()]);
+  pd.forEach(r=>{T(M,y,r[0]+':',9,false,'#555555');T(M+80,y,r[1],9,true);y+=13;});
+  y+=6;
+  Rc(M,y,CW,38,'#eaf2ff','#1e4b8f');
+  T(M+10,y+23,'TOTAL TAGIHAN',9,true,'#1e4b8f');T(R-10,y+25,rp(total),17,true,'#1e4b8f','r');
+  y+=48;
+  if(remain>0){Rc(M,y,CW,32,'#fff3e0','#e65100');T(M+10,y+20,'SISA BAYAR',9,true,'#e65100');T(R-10,y+22,rp(remain),14,true,'#e65100','r');y+=42;}
+  if(n.catatan){y+=8;wrapT('Catatan: '+n.catatan,9,false,CW).forEach(s=>{T(M,y,s,9);y+=11.5;});y+=6;}
+  if(photo){const ph=Math.min(120,120*photo.h/photo.w),pw=ph*photo.w/photo.h;T(M,y+8,'BUKTI TIMBANGAN',8,true,'#c2185b');Im('Im2',M,y+14,pw,ph);y+=14+ph+14;}
+  y+=2;Ln(M,y,R,'#cfd8e8');y+=14;
+  T(M,y,'Syarat & Ketentuan:',8,true);y+=11;
+  TERMS.forEach((s,i)=>wrapT((i+1)+'. '+s,7.5,false,CW).forEach(l=>{T(M,y,l,7.5,false,'#555555');y+=9.5;}));
+  y+=8;T(W/2,y,'Terima kasih atas kepercayaan Anda',8,false,'#1e4b8f','c');y+=20;
+  const H=Math.ceil(y),f=v=>(+v).toFixed(2);
+  const stream=O.map(o=>{
+    if(o.k==='t')return 'BT /'+(o.b?'F2':'F1')+' '+o.z+' Tf '+col(o.c)+' rg '+f(o.x)+' '+f(H-o.y)+' Td ('+o.s.replace(/[\\()]/g,'\\$&')+') Tj ET';
+    if(o.k==='r')return col(o.f)+' rg '+f(o.x)+' '+f(H-o.y-o.h)+' '+f(o.w)+' '+f(o.h)+' re f'+(o.st?'\n'+col(o.st)+' RG 0.8 w '+f(o.x)+' '+f(H-o.y-o.h)+' '+f(o.w)+' '+f(o.h)+' re S':'');
+    if(o.k==='l')return col(o.c)+' RG 0.5 w '+f(o.x1)+' '+f(H-o.y)+' m '+f(o.x2)+' '+f(H-o.y)+' l S';
+    return 'q '+f(o.w)+' 0 0 '+f(o.h)+' '+f(o.x)+' '+f(H-o.y-o.h)+' cm /'+o.id+' Do Q';
+  }).join('\n');
+  const enc=s=>{const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i)&255;return u;};
+  const chunks=[],offs=[];let pos=0;
+  const put=u=>{chunks.push(u);pos+=u.length;};
+  const obj=(num,body,data)=>{offs[num]=pos;put(enc(num+' 0 obj\n'+body+(data?'\nstream\n':'\n')));if(data){put(data);put(enc('\nendstream\n'));}put(enc('endobj\n'));};
+  const imgs=[];if(logo)imgs.push(['Im1',logo]);if(photo)imgs.push(['Im2',photo]);
+  const xo=imgs.map((m,i)=>'/'+m[0]+' '+(7+i)+' 0 R').join(' ');
+  put(enc('%PDF-1.4\n'));
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+  obj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << '+xo+' >> >> /Contents 4 0 R >>');
+  const cs=enc(stream);obj(4,'<< /Length '+cs.length+' >>',cs);
+  obj(5,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  obj(6,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  imgs.forEach((m,i)=>obj(7+i,'<< /Type /XObject /Subtype /Image /Width '+m[1].w+' /Height '+m[1].h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+m[1].u.length+' >>',m[1].u));
+  const N=7+imgs.length,xr=pos;
+  let x='xref\n0 '+N+'\n0000000000 65535 f \n';
+  for(let i=1;i<N;i++)x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  put(enc(x+'trailer\n<< /Size '+N+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF'));
+  const out=new Uint8Array(pos);let p=0;chunks.forEach(u=>{out.set(u,p);p+=u.length;});
+  return out;
+}
+async function kirimWAPdf(){
+  const n=notas.find(x=>x.id===viewId);if(!n)return;
+  try{
+    const bytes=await buildNotaPdf(n),t=totalOf(n),r=Math.max(0,t-paidOf(n,t));
+    const file=new File([bytes],'Nota-'+notaNoOf(n)+'.pdf',{type:'application/pdf'});
+    const cap='Nota '+notaNoOf(n)+' - '+(n.nama||'Pelanggan')+'\nTotal '+rp(t)+(r>0?', sisa bayar '+rp(r):' (LUNAS)')+'\nTerima kasih 🙏';
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:file.name,text:cap});}
+    else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      alert('Perangkat ini tidak mendukung kirim file langsung. PDF tersimpan di Downloads; lampirkan manual di WhatsApp.');
+    }
+  }catch(e){if(e&&e.name!=='AbortError')alert('Gagal membuat/mengirim PDF: '+(e.message||e));}
+}
 function setPage(on){
   let st=$('pgStyle');
   if(!st){st=document.createElement('style');st.id='pgStyle';document.head.appendChild(st);}
