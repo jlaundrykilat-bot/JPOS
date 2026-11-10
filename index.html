@@ -34,6 +34,11 @@ button,select,input{touch-action:manipulation;-webkit-tap-highlight-color:transp
 .status-dicuci{background:#fff3cd;color:#856404}
 .status-siap{background:var(--green);color:#1b5e20}
 .status-diambil{background:#e0e0e0;color:#555}
+.status-batal{background:#cfcfcf;color:#616161;text-decoration:line-through}
+.fl{display:block;font-size:.78rem;color:#c2185b;margin:2px 0 4px;font-weight:600}
+.hd-row{display:grid;gap:8px;font-size:.72rem;color:#c2185b;font-weight:600;margin:0 0 4px}
+.hd-tar{grid-template-columns:1.3fr 1fr 74px 38px}
+.hd-lay{grid-template-columns:1.5fr 62px 1fr 54px 38px;gap:6px}
 .editor,.settings,.digital-nota{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--rose);z-index:100;flex-direction:column;padding:10px;overflow-y:auto}
 .editor.active,.settings.active,.digital-nota.active{display:flex}
 .windows{display:flex;flex-direction:column;gap:12px}
@@ -95,6 +100,7 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
     </div>
     <div style="display:flex;gap:6px"><button class="btn btn-small btn-outline" onclick="openReport()">📊<span class="hb-t"> Laporan</span></button><button class="btn btn-small btn-outline" onclick="openSettings()">⚙️<span class="hb-t"> Setting</span></button></div>
   </div>
+  <div id="todayBar" style="display:flex;gap:8px;margin:0 0 10px"></div>
   <div id="backupWarn" class="pay-info" style="display:none;background:#fff3cd;color:#856404;margin:0 0 10px;cursor:pointer" onclick="openSettings()"></div>
   <div style="display:flex;gap:8px"><input id="q" placeholder="🔍 Cari nama / HP" oninput="renderList()"><select id="fil" onchange="renderList()" style="width:46%"><option value="all">Semua</option><option value="aktif">Belum diambil</option><option value="belumlunas">Belum lunas</option><option value="diambil">Sudah diambil</option><option value="lama">Lewat 7 hari</option></select></div>
   <div id="list" class="list"></div>
@@ -135,6 +141,7 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
         <option value="dicuci">Sedang Dicuci</option>
         <option value="siap">Siap Diambil</option>
         <option value="diambil">Sudah Diambil</option>
+        <option value="batal">Dibatalkan</option>
       </select>
       <select id="payStatus" onchange="onPayStatus()">
         <option value="belum">Belum Bayar</option>
@@ -157,8 +164,9 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
     </div>
   </div>
   <div class="editor-footer">
-    <button class="btn btn-outline" onclick="cancelEditor()">Batal</button>
-    <button class="btn btn-outline" id="btnDelete" onclick="deleteNota()" style="display:none">🗑️ Hapus</button>
+    <button class="btn btn-outline" onclick="cancelEditor()">Tutup</button>
+    <button class="btn btn-outline" id="btnDelete" onclick="deleteNota()" style="display:none">🗑️</button>
+    <button class="btn btn-outline" id="btnBatal" onclick="batalNota()" style="display:none">🚫 Batalkan</button>
     <button class="btn" onclick="saveNota()">Simpan</button>
   </div>
 </div>
@@ -167,9 +175,13 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
   <div class="windows">
     <div class="window">
       <div class="window-title">🏪 Detail Toko</div>
+      <label class="fl">Nama toko</label>
       <input id="shopName" placeholder="Nama Toko">
+      <label class="fl">Tagline / sub judul</label>
       <input id="shopSub" placeholder="Tagline / Sub judul">
+      <label class="fl">Alamat</label>
       <input id="shopAddress" placeholder="Alamat">
+      <label class="fl">WA / telepon</label>
       <input id="shopContact" placeholder="WA / Telepon">
     </div>
     <div class="window">
@@ -182,16 +194,25 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
     </div>
     <div class="window">
       <div class="window-title">💰 Tarif Laundry</div>
+      <div class="hd-row hd-tar"><span>Nama item</span><span>Harga (Rp)</span><span>Satuan</span><span></span></div>
       <div id="tariffContainer"></div>
       <button class="btn btn-small" onclick="addTariff()" style="width:100%;margin-top:8px">+ Tambah Tarif</button>
     </div>
     <div class="window">
       <div class="window-title">⚡ Layanan & Struk</div>
       <div style="font-size:.85rem;margin-bottom:6px">Daftar layanan <small>(nama · tambahan biaya · nilai · estimasi hari; 0 hari = selesai hari yang sama)</small></div>
+      <div class="hd-row hd-lay"><span>Nama layanan</span><span>Jenis</span><span>Tambahan</span><span>Hari</span><span></span></div>
       <div id="layananContainer"></div>
       <button class="btn btn-small" onclick="addLayanan()" style="width:100%;margin:2px 0 14px">+ Tambah Layanan</button>
       <div style="font-size:.85rem;margin-bottom:6px">Lebar struk</div>
       <select id="sStrukW"><option value="58">Lebar struk 58 mm</option><option value="78">Lebar struk 78 mm</option></select>
+    </div>
+    <div class="window">
+      <div class="window-title">🔒 PIN</div>
+      <div id="pinInfo" style="font-size:.85rem;margin-bottom:8px"></div>
+      <button class="btn btn-small" onclick="pinChange()" style="width:100%;margin-bottom:8px">Buat / Ubah PIN</button>
+      <button class="btn btn-small btn-outline" onclick="pinOff()" style="width:100%;margin-bottom:8px">Nonaktifkan PIN</button>
+      <button class="btn btn-small btn-outline" onclick="pinLockNow()" style="width:100%">🔒 Kunci sekarang</button>
     </div>
     <div class="window">
       <div class="window-title">💾 Backup Data</div>
@@ -204,6 +225,18 @@ body.pr #digitalNota{display:none!important}body.pr #report{position:static!impo
   <div class="settings-footer">
     <button class="btn btn-outline" onclick="closeSettings()">Tutup</button>
     <button class="btn" onclick="saveSettingsNow()">Simpan Setting</button>
+  </div>
+</div>
+
+<div id="pinModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px">
+  <div class="window" style="width:100%;max-width:340px;margin:0">
+    <div class="window-title" id="pinTitle">🔒 PIN</div>
+    <div id="pinMsg" style="font-size:.85rem;margin-bottom:8px"></div>
+    <input id="pin0" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN lama" style="display:none">
+    <input id="pin1" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN">
+    <input id="pin2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Ulangi PIN baru" style="display:none">
+    <div id="pinErr" style="color:#c2185b;font-size:.8rem;min-height:1.1em;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closePin()">Batal</button><button class="btn" onclick="submitPin()">OK</button></div>
   </div>
 </div>
 
@@ -320,16 +353,16 @@ function checkBackup(){
 
 function renderList(){
   const list=$('list'),empty=$('empty');
-  list.innerHTML='';checkBackup();updatePelList();
+  list.innerHTML='';checkBackup();updatePelList();renderToday();
   if(!notas.length){empty.innerHTML='Belum ada nota~<br>Tap tombol + di bawah ya';empty.style.display='block';return;}
   const q=($('q').value||'').toLowerCase(),f=$('fil').value;
   const sorted=[...notas].sort((a,b)=>new Date(b.tanggal||0)-new Date(a.tanggal||0)||(b.no||0)-(a.no||0)).filter(n=>{
     const t=totalOf(n),paid=paidOf(n,t);
     if(q&&!((n.nama||'')+' '+(n.hp||'')).toLowerCase().includes(q))return false;
-    if(f==='aktif')return n.status!=='diambil';
-    if(f==='belumlunas')return paid<t;
+    if(f==='aktif')return n.status!=='diambil'&&aktif(n);
+    if(f==='belumlunas')return paid<t&&aktif(n);
     if(f==='diambil')return n.status==='diambil';
-    if(f==='lama')return n.status!=='diambil'&&umurOf(n)>7;
+    if(f==='lama')return n.status!=='diambil'&&aktif(n)&&umurOf(n)>7;
     return true;
   });
   if(!sorted.length){empty.textContent='Tidak ada nota yang cocok.';empty.style.display='block';return;}
@@ -345,10 +378,10 @@ function renderList(){
         <h3>${esc(n.nama||'Tanpa Nama')}</h3>
         <div class="nota-meta">${esc(n.tanggal||'')} • ${(n.items||[]).length} item${lyn(n.layanan)?' • ⚡'+esc(lyn(n.layanan)):''}${n.estimasi?' • Est. '+esc(n.estimasi):''}</div>
         <div class="nota-meta">${rp(total)}</div>
-        ${total>0&&paid<total?`<div class="nota-meta" style="color:#c2185b">Sisa ${rp(total-paid)}</div>`:''}
-        <span class="status status-${esc(n.status)}">${esc(statusLabel(n.status))}</span>${badges(n)}
+        ${aktif(n)&&total>0&&paid<total?`<div class="nota-meta" style="color:#c2185b">Sisa ${rp(total-paid)}</div>`:''}
+        <span class="status status-${esc(n.status)}">${esc(statusLabel(n.status))}</span>${badges(n)}${n.status==='batal'&&n.batalAlasan?'<div class="nota-meta">Alasan: '+esc(n.batalAlasan)+'</div>':''}
         <div style="margin-top:8px">
-          <button class="btn btn-small" onclick="event.stopPropagation();showDigitalNota('${esc(n.id)}')">📄 Nota Digital</button>
+          <button class="btn btn-small" onclick="event.stopPropagation();showDigitalNota('${esc(n.id)}')">📄 Nota Digital</button>${quickBtn(n)}
         </div>
       </div>
     `;
@@ -357,7 +390,50 @@ function renderList(){
   });
 }
 
-function statusLabel(s){return{diterima:'Diterima',dicuci:'Dicuci',siap:'Siap Diambil',diambil:'Sudah Diambil'}[s]||s;}
+function statusLabel(s){return{diterima:'Diterima',dicuci:'Dicuci',siap:'Siap Diambil',diambil:'Sudah Diambil',batal:'Dibatalkan'}[s]||s;}
+const aktif=n=>n.status!=='batal';
+const waNum=v=>{let h=String(v||'').replace(/\D/g,'');if(h.startsWith('0'))h='62'+h.slice(1);else if(h.startsWith('8'))h='62'+h;return h;};
+function renderToday(){
+  const t=today();let cnt=0,kas=0,hut=0;
+  notas.filter(aktif).forEach(n=>{
+    if(n.tanggal===t)cnt++;
+    paysOf(n).forEach(p=>{if(p.tgl===t)kas+=p.jml;});
+    const tt=totalOf(n);hut+=Math.max(0,tt-Math.min(paidOf(n,tt),tt));
+  });
+  const chip=(l,v,c)=>'<div style="flex:1;background:#fff;border-radius:12px;padding:8px 6px;text-align:center;box-shadow:0 2px 8px rgba(255,143,171,.15)"><div style="font-size:.68rem;color:#888">'+l+'</div><div style="font-weight:700;color:'+c+';font-size:.92rem">'+v+'</div></div>';
+  $('todayBar').innerHTML=chip('Nota hari ini',cnt,'#c2185b')+chip('Kas masuk hari ini',rp(kas),'#2e7d32')+chip('Total piutang',rp(hut),'#e65100');
+}
+function quickBtn(n){
+  const id=esc(n.id);
+  if(n.status==='batal'||n.status==='diambil')return '';
+  if(n.status==='siap')return ' <button class="btn btn-small btn-outline" onclick="event.stopPropagation();setStatus(\''+id+'\',\'diambil\')">📦 Diambil</button>';
+  return ' <button class="btn btn-small" style="background:#43a047" onclick="event.stopPropagation();setSiap(\''+id+'\')">✅ Siap</button>';
+}
+function setStatus(id,st){
+  const n=notas.find(x=>x.id===id);if(!n)return;
+  const old=n.status;n.status=st;
+  if(!saveNotas()){n.status=old;return;}
+  renderList();
+}
+function setSiap(id){
+  const n=notas.find(x=>x.id===id);if(!n)return;
+  const old=n.status;n.status='siap';
+  if(!saveNotas()){n.status=old;return;}
+  renderList();
+  const t=totalOf(n),r=Math.max(0,t-paidOf(n,t));
+  const msg='Halo '+(n.nama||'Kak')+', cucian Anda di '+(settings.shopName||'laundry kami')+' sudah *selesai dan siap diambil*.\nTotal '+rp(t)+(r>0?', sisa bayar '+rp(r)+'.':' (sudah lunas).')+'\nTerima kasih 🙏';
+  window.open('https://wa.me/'+waNum(n.hp)+'?text='+encodeURIComponent(msg),'_blank');
+}
+function batalNota(){
+  const n=notas.find(x=>x.id===currentId);if(!n)return;
+  const a=prompt('Alasan membatalkan nota "'+(n.nama||'tanpa nama')+'"? (Nota tetap tersimpan, tapi tidak dihitung di laporan.)');
+  if(a===null)return;
+  const old=JSON.stringify(n);
+  n.status='batal';n.batalAlasan=a.trim();n.batalTgl=today();
+  if(!saveNotas()){Object.assign(n,JSON.parse(old));return;}
+  closeEditor();renderList();
+}
+
 function payStatusLabel(s){return{belum:'Belum Bayar',dp:'DP / Sebagian',lunas:'Lunas'}[s]||s;}
 
 function newNota(){
@@ -378,6 +454,7 @@ function newNota(){
   addItem();
   updateTotal();
   $('btnDelete').style.display='none';
+  $('btnBatal').style.display='none';
   onNama(false);
   editorDirty=false;
   document.getElementById('editor').classList.add('active');
@@ -407,6 +484,7 @@ function openEditor(id){
   else{prev.style.display='none';ph.style.display='flex';}
   updateTotal();
   $('btnDelete').style.display='';
+  $('btnBatal').style.display=n.status==='batal'?'none':'';
   onNama(false);
   editorDirty=false;
   document.getElementById('editor').classList.add('active');
@@ -485,7 +563,7 @@ function autoEst(){
 }
 function pelStats(nm){
   const k=(nm||'').trim().toLowerCase();if(!k)return null;
-  const L=notas.filter(n=>n.id!==currentId&&(n.nama||'').trim().toLowerCase()===k);
+  const L=notas.filter(n=>aktif(n)&&n.id!==currentId&&(n.nama||'').trim().toLowerCase()===k);
   if(!L.length)return null;
   const tot=L.reduce((x,n)=>x+totalOf(n),0),hut=L.reduce((x,n)=>{const t=totalOf(n);return x+Math.max(0,t-paidOf(n,t));},0);
   const last=L.map(n=>n.tanggal||'').sort().pop();
@@ -510,7 +588,7 @@ function updatePelList(){
   $('pelList').innerHTML=Object.values(m).map(v=>'<option value="'+esc(v)+'">').join('');
 }
 function badges(n){
-  if(n.status==='diambil')return'';
+  if(n.status==='diambil'||n.status==='batal')return'';
   const u=umurOf(n);
   if(u>7)return ' <span class="status" style="background:#ffcdd2;color:#b71c1c">⏰ '+u+' hari belum diambil</span>';
   if(n.estimasi&&n.status!=='siap'&&n.estimasi<today())return ' <span class="status" style="background:#ffe0b2;color:#e65100">Lewat estimasi</span>';
@@ -592,7 +670,7 @@ async function saveNota(){
     const payStatus=(t>0&&p>=t)?'lunas':(p>0?'dp':'belum');
     const pays=syncPays(idx0()>=0?paysOf(notas[idx0()]):[],Math.min(p,t),$('payMethod').value);
     const nota={
-      id:currentId,no:idx>=0?notas[idx].no:undefined,
+      id:currentId,no:idx>=0?notas[idx].no:undefined,batalAlasan:idx>=0?notas[idx].batalAlasan:undefined,batalTgl:idx>=0?notas[idx].batalTgl:undefined,
       nama:$('nama').value.trim(),hp:$('hp').value.trim(),tanggal:$('tanggal').value,
       status:$('status').value,payStatus,payAmount:p,payMethod:$('payMethod').value,
       catatan:$('catatan').value.trim(),items,photo:currentPhoto,pays,layanan:$('layanan').value,antar:cp.antar,eks:cp.eks,disc:cp.disc,dTipe:$('dTipe').value,dVal:parseFloat($('dVal').value)||0,estimasi:$('est').value
@@ -642,15 +720,15 @@ function renderReport(){
   const v=$('rPeriod').value;
   $('rCustom').style.display=v==='custom'?'flex':'none';
   const [a,b]=range(),inR=d=>d>=a&&d<=b;
-  const nin=notas.filter(n=>inR(n.tanggal||'')),omzet=nin.reduce((x,n)=>x+totalOf(n),0);
-  const pays=[];notas.forEach(n=>paysOf(n).forEach(p=>{if(inR(p.tgl||''))pays.push(p);}));
+  const nin=notas.filter(n=>aktif(n)&&inR(n.tanggal||'')),omzet=nin.reduce((x,n)=>x+totalOf(n),0);
+  const pays=[];notas.filter(aktif).forEach(n=>paysOf(n).forEach(p=>{if(inR(p.tgl||''))pays.push(p);}));
   const kas=pays.reduce((x,p)=>x+p.jml,0),met={cash:0,transfer:0,qris:0};
   pays.forEach(p=>{met[p.metode]=(met[p.metode]||0)+p.jml;});
   const ex=exps.filter(e=>inR(e.tgl)).sort((x,y)=>y.tgl.localeCompare(x.tgl)),exTot=ex.reduce((x,e)=>x+e.jml,0);
   const jn={};
   nin.forEach(n=>(n.items||[]).forEach(i=>{const k=(i.jenis||'').trim().toLowerCase();const o=jn[k]||(jn[k]={nama:(i.jenis||'').trim(),qty:0,rp:0});o.qty+=parseFloat(i.jumlah)||0;o.rp+=lineSub(i.jumlah,i.harga);}));
   const jl=Object.values(jn).sort((x,y)=>y.rp-x.rp);
-  const hut=notas.map(n=>{const t=totalOf(n);return{n,sisa:t-Math.min(paidOf(n,t),t),umur:Math.max(0,Math.floor((Date.now()-new Date(n.tanggal||Date.now()))/864e5))};}).filter(x=>x.sisa>0).sort((x,y)=>y.umur-x.umur);
+  const hut=notas.filter(aktif).map(n=>{const t=totalOf(n);return{n,sisa:t-Math.min(paidOf(n,t),t),umur:Math.max(0,Math.floor((Date.now()-new Date(n.tanggal||Date.now()))/864e5))};}).filter(x=>x.sisa>0).sort((x,y)=>y.umur-x.umur);
   const hTot=hut.reduce((x,h)=>x+h.sisa,0),laba=kas-exTot;
   const row=(l,val,st)=>`<div${st?` style="${st}"`:''}><span>${l}</span><span>${val}</span></div>`;
   const win=(t,body)=>`<div class="window"><div class="window-title">${t}</div><div class="pay-info" style="margin-top:0">${body}</div></div>`;
@@ -669,9 +747,9 @@ function exportCSV(){
   const add=r=>L.push(r.map(c).join(','));
   add(['LAPORAN',a+' s/d '+b]);add([]);
   add(['NOTA']);add(['Tanggal','No','Nama','Total','Dibayar','Sisa']);
-  notas.filter(n=>inR(n.tanggal||'')).forEach(n=>{const t=totalOf(n),p=Math.min(paidOf(n,t),t);add([n.tanggal,n.no||'',n.nama,t,p,t-p]);});
+  notas.filter(n=>aktif(n)&&inR(n.tanggal||'')).forEach(n=>{const t=totalOf(n),p=Math.min(paidOf(n,t),t);add([n.tanggal,n.no||'',n.nama,t,p,t-p]);});
   add([]);add(['KAS MASUK']);add(['Tanggal','Nama','Jumlah','Metode']);
-  notas.forEach(n=>paysOf(n).forEach(p=>{if(inR(p.tgl||''))add([p.tgl,n.nama,p.jml,p.metode]);}));
+  notas.filter(aktif).forEach(n=>paysOf(n).forEach(p=>{if(inR(p.tgl||''))add([p.tgl,n.nama,p.jml,p.metode]);}));
   add([]);add(['PENGELUARAN']);add(['Tanggal','Kategori','Jumlah','Keterangan']);
   exps.filter(e=>inR(e.tgl)).forEach(e=>add([e.tgl,e.kat,e.jml,e.ket||'']));
   const el=document.createElement('a');
@@ -746,7 +824,7 @@ function showDigitalNota(id){
     </tr>`).join('');
   const logoHtml=settings.logo?`<img src="${esc(settings.logo)}" alt="logo">`:'<div style="width:56px;height:56px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🧺</div>';
   const photoHtml=n.photo?`<div class="nota-photo-box"><img src="${esc(n.photo)}"><div style="font-size:.75rem;margin-top:4px;color:#c2185b"><b>BUKTI TIMBANGAN</b></div></div>`:'';
-  const statusText=isLunas?'LUNAS':(paid>0?'DP — BELUM LUNAS':'BELUM LUNAS');
+  const statusText=n.status==='batal'?'DIBATALKAN':(isLunas?'LUNAS':(paid>0?'DP — BELUM LUNAS':'BELUM LUNAS'));
   $('notaPaper').innerHTML=`
     <div class="nota-header-pro">
       ${logoHtml}
@@ -902,9 +980,9 @@ async function buildNotaPdf(n){
   if(pp.disc)tr.push(['Diskon',-pp.disc]);
   tr.forEach(r=>{T(c3-90,y,r[0],9,true,'#222222','r');T(c3,y,(r[1]<0?'- ':'')+rp(Math.abs(r[1])),9,true,'#222222','r');y+=13;});
   y+=8;
-  const gc=isL?'#2e7d32':'#c2185b';
-  Rc(M,y,CW,26,isL?'#e8f5e9':'#fdecef',gc);
-  T(W/2,y+17.5,isL?'LUNAS':(paid>0?'DP - BELUM LUNAS':'BELUM LUNAS'),11,true,gc,'c');
+  const bt=n.status==='batal',gc=bt?'#616161':(isL?'#2e7d32':'#c2185b');
+  Rc(M,y,CW,26,bt?'#eeeeee':(isL?'#e8f5e9':'#fdecef'),gc);
+  T(W/2,y+17.5,bt?'DIBATALKAN':(isL?'LUNAS':(paid>0?'DP - BELUM LUNAS':'BELUM LUNAS')),11,true,gc,'c');
   y+=42;
   const pd=[['Status Bayar',isL?'Lunas':(paid>0?'DP / Sebagian':'Belum Bayar')],['Sudah Bayar',rp(paid)],['Sisa',rp(remain)]];
   if(change>0)pd.push(['Kembalian',rp(change)]);
@@ -963,6 +1041,63 @@ async function kirimWAPdf(){
     }
   }catch(e){if(e&&e.name!=='AbortError')alert('Gagal membuat/mengirim PDF: '+(e.message||e));}
 }
+const PIN_KEY='nota_pin_v1';
+let pinUntil=0,pinFail=0,pinLockUntil=0,pinMode='',pinCb=null;
+const pinGet=()=>load(PIN_KEY,null);
+async function pinHash(pin,salt){
+  const s=salt+':'+pin;
+  if(window.crypto&&window.crypto.subtle&&window.TextEncoder){
+    const b=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+  let h1=0xdeadbeef,h2=0x41c6ce57;
+  for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return 'w'+(4294967296*(2097151&h2)+(h1>>>0)).toString(16);
+}
+async function savePin(v){const salt=Math.random().toString(36).slice(2)+Date.now().toString(36);lsSet(PIN_KEY,JSON.stringify({salt,hash:await pinHash(v,salt)}));}
+function needPin(cb){
+  const p=pinGet();
+  if(!p||Date.now()<pinUntil){cb();return;}
+  openPinModal('enter',cb);
+}
+function openPinModal(mode,cb){
+  pinMode=mode;pinCb=cb||null;
+  const cfg={
+    create:['🔒 Buat PIN','Buat PIN 4-6 angka untuk mengunci Laporan, Setting, Hapus dan Batalkan nota. Catat PIN Anda: jika lupa, tidak ada reset.',0,'PIN baru (4-6 angka)',1],
+    enter:['🔒 Masukkan PIN','',0,'PIN',0],
+    change:['🔒 Ubah PIN','Masukkan PIN lama, lalu PIN baru.',1,'PIN baru (4-6 angka)',1],
+    off:['🔒 Nonaktifkan PIN','Masukkan PIN untuk menonaktifkan. Laporan dan Setting akan terbuka tanpa kunci.',0,'PIN',0]
+  }[mode];
+  $('pinTitle').textContent=cfg[0];$('pinMsg').textContent=cfg[1];
+  $('pin0').style.display=cfg[2]?'':'none';$('pin1').placeholder=cfg[3];$('pin2').style.display=cfg[4]?'':'none';
+  ['pin0','pin1','pin2'].forEach(i=>{$(i).value='';});$('pinErr').textContent='';
+  $('pinModal').style.display='flex';
+  setTimeout(()=>$(cfg[2]?'pin0':'pin1').focus(),50);
+}
+function closePin(){$('pinModal').style.display='none';['pin0','pin1','pin2'].forEach(i=>{$(i).value='';});pinCb=null;}
+async function submitPin(){
+  const v0=$('pin0').value.trim(),v1=$('pin1').value.trim(),v2=$('pin2').value.trim();
+  const err=m=>{$('pinErr').textContent=m;},ok=x=>/^\d{4,6}$/.test(x);
+  const check=async v=>{
+    if(Date.now()<pinLockUntil){err('Terkunci. Coba lagi dalam '+Math.ceil((pinLockUntil-Date.now())/1000)+' detik.');return false;}
+    const p=pinGet();if(!p){return true;}
+    if(await pinHash(v,p.salt)===p.hash){pinFail=0;return true;}
+    if(++pinFail>=5){pinFail=0;pinLockUntil=Date.now()+30000;err('Salah 5 kali. Terkunci 30 detik.');}else err('PIN salah.');
+    return false;
+  };
+  if(pinMode==='create'){if(!ok(v1))return err('PIN harus 4-6 angka.');if(v1!==v2)return err('Ulangi PIN tidak sama.');await savePin(v1);}
+  else if(pinMode==='enter'){if(!(await check(v1)))return;}
+  else if(pinMode==='off'){if(!(await check(v1)))return;try{localStorage.removeItem(PIN_KEY);}catch(e){}}
+  else if(pinMode==='change'){if(!(await check(v0)))return;if(!ok(v1))return err('PIN baru harus 4-6 angka.');if(v1!==v2)return err('Ulangi PIN tidak sama.');await savePin(v1);}
+  pinUntil=Date.now()+300000;
+  const cb=pinCb;closePin();if(cb)cb();
+}
+function updatePinInfo(){$('pinInfo').textContent=pinGet()?'PIN aktif. Setelah dimasukkan, terbuka 5 menit.':'PIN belum diatur: Laporan dan Setting terbuka untuk semua. Tap tombol di bawah bila ingin mengaktifkan.';}
+function pinChange(){openPinModal(pinGet()?'change':'create',()=>{updatePinInfo();alert('PIN tersimpan.');});}
+function pinOff(){if(!pinGet()){alert('PIN belum diatur.');return;}openPinModal('off',()=>{updatePinInfo();alert('PIN dinonaktifkan.');});}
+function pinLockNow(){pinUntil=0;closeSettings();closeReport();}
 function setPage(on){
   let st=$('pgStyle');
   if(!st){st=document.createElement('style');st.id='pgStyle';document.head.appendChild(st);}
@@ -993,7 +1128,7 @@ function strukModel(n){
   lr('Bayar ('+(n.payMethod||'cash')+')',rp(paid));
   if(rem>0)lr('SISA',rp(rem),1);
   if(chg>0)lr('Kembali',rp(chg));
-  c(t>0&&rem===0?'** LUNAS **':'** BELUM LUNAS **',1);
+  c(n.status==='batal'?'** DIBATALKAN **':(t>0&&rem===0?'** LUNAS **':'** BELUM LUNAS **'),1);
   if(n.catatan)l('Cat: '+n.catatan);
   sep();c('Terima kasih');c('Ambil cucian bawa nota');
   return L;
@@ -1109,6 +1244,12 @@ document.getElementById('tanggal').value=today();
   const os=openSettings,orp=openReport;
   openSettings=function(){document.getElementById('settings').classList.add('active');try{os();}catch(e){alert('Setting gagal dimuat: '+e.message);}};
   openReport=function(){document.getElementById('report').classList.add('active');try{orp();}catch(e){alert('Laporan gagal dimuat: '+e.message);}};
+})();
+(function(){
+  ['openReport','deleteNota','batalNota'].forEach(n=>{const f=window[n];window[n]=function(){const a=arguments,t=this;needPin(()=>f.apply(t,a));};});
+  const os=window.openSettings;
+  window.openSettings=function(){const a=arguments,t=this;needPin(()=>{os.apply(t,a);updatePinInfo();});};
+  ['pin0','pin1','pin2'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')submitPin();}));
 })();
 window.addEventListener('afterprint',()=>{document.body.classList.remove('pr');setPage(false);});
 $('editor').addEventListener('input',()=>{editorDirty=true;});
